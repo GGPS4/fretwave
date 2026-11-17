@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fretwave: see it, hear it, learn the fretboard</title>
+<meta name="description" content="Learn every note on the guitar fretboard with color, sound and play. Note games, chords, scales, ear training and a tuner, free in your browser.">
+<meta name="theme-color" content="#1d1a3b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231d1a3b'/%3E%3Cpath d='M8 38c6-14 12-14 16 0s10 14 16 0 10-14 16 0' fill='none' stroke='%23ffc857' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>/*CSS*/</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Practice modes">
+    <div class="logo" title="Fretwave">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#26234d"/><path d="M14 18v28M26 18v28M38 18v28M50 18v28" stroke="#c9ced6" stroke-width="2" opacity=".5"/><path d="M6 36c6-14 11-14 15 0s10 14 15 0 10-14 15 0 6 6 8 4" fill="none" stroke="#ffc857" stroke-width="4.5" stroke-linecap="round"/><circle cx="21" cy="36" r="5" fill="#ff7b54"/><circle cx="43" cy="30" r="5" fill="#5aa9ff"/></svg>
+    </div>
+    <div id="nav"></div>
+    <div class="rail-foot">
+      <div class="daily" id="daily" title="Notes practiced today"></div>
+      <div class="streak" id="streak"></div>
+    </div>
+  </nav>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1 id="mode-title">Explore the neck</h1>
+        <p id="mode-help"></p>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="btn-sound" aria-pressed="true" aria-label="Sound" title="Sound on or off"></button>
+        <button class="icon-btn" id="btn-voice" aria-pressed="true" aria-label="Say note names aloud" title="Say note names aloud"></button>
+        <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"></button>
+      </div>
+    </header>
+    <section class="stage">
+      <div class="hud" id="hud" aria-live="polite"></div>
+      <div class="neck-scroll"><div class="neck-wrap"><svg id="neck" role="img" aria-label="Interactive fretboard"></svg></div></div>
+      <p class="rotate-hint">Swipe the neck sideways for higher frets, or turn your phone for the full view.</p>
+    </section>
+    <section class="panel" id="panel"></section>
+  </main>
+</div>
+
+<dialog id="settings">
+  <h2>Settings</h2>
+  <div class="controls" id="settings-body"></div>
+  <div class="dlg-foot"><button class="btn btn-primary" id="settings-done">Done</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+<script>/*JS*/</script>
+</body>
+</html>
