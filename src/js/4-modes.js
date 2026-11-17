@@ -33,6 +33,7 @@ const Chords = {
           <button class="btn" id="ch-arp">${ICONS.play}One string at a time</button>
           <label class="switch" style="margin-left:6px"><input type="checkbox" id="ch-all" ${this.showAll ? 'checked' : ''}>Show chord tones on the whole neck</label>
         </div>
+        <div class="wrap"><label class="switch"><input type="checkbox" id="ch-caged" ${this.caged ? 'checked' : ''}>CAGED map (major chords)</label><span id="ch-cagedbtns" class="wrap"></span></div>
         <div class="legend" id="ch-legend"></div>
       </div>
       <div class="controls">
@@ -51,6 +52,7 @@ const Chords = {
     $('#ch-strum', p).addEventListener('click', () => this.v && strum(this.v.frets));
     $('#ch-arp', p).addEventListener('click', () => this.v && strum(this.v.frets, { arp: true }));
     $('#ch-all', p).addEventListener('change', (e) => { this.showAll = e.target.checked; this.draw(); });
+    $('#ch-caged', p).addEventListener('change', (e) => { this.caged = e.target.checked; if (this.caged && this.type !== 'maj') { this.type = 'maj'; $$('#ch-types .chip', p).forEach((x) => x.setAttribute('aria-pressed', x.dataset.t === 'maj')); this.update(false); } else this.draw(); });
     wireSeg(p, 'ch-prog', (v) => { this.prog = v; this.stopLoop(); this.renderProg(); });
     $('#ch-loop', p).addEventListener('click', () => (this.loop ? this.stopLoop() : this.startLoop()));
     $('#ch-bpm', p).addEventListener('input', (e) => { this.bpm = +e.target.value; $('#ch-bpm-o', p).textContent = this.bpm + ' bpm'; });
@@ -78,6 +80,12 @@ const Chords = {
     if (this.v) Neck.scrollTo(Math.max(0, this.v.base + 1));
   },
   draw(v = this.v, root = this.root, iv = chordType(this.type).iv) {
+    const cb = this.p && $('#ch-cagedbtns', this.p); if (cb) cb.innerHTML = '';
+    if (this.caged && this.type === 'maj' && root === this.root && v === this.v) {
+      const shapes = Neck.caged(root);
+      if (cb && shapes.length) { cb.innerHTML = shapes.filter((sh) => sh.hi <= S.settings.frets).map((sh) => `<button class="chip" data-sh="${sh.name}" style="border-color:${sh.color}">${sh.name} shape</button>`).join(''); $$('[data-sh]', cb).forEach((b) => b.addEventListener('click', () => { const sh = shapes.find((x) => x.name === b.dataset.sh); Neck.caged(root, { only: sh.name }); strum(sh.frets); Neck.scrollTo(sh.lo + 1); })); }
+      return;
+    }
     Neck.clear();
     if (this.showAll) {
       const pcs = iv.map((i) => mod(root + i, 12));
@@ -144,6 +152,7 @@ const Scales = {
         </div>
         <div class="wrap" style="gap:22px">
           <label class="switch"><input type="checkbox" id="sc-drone" ${this.drone ? 'checked' : ''}>Root drone (hear the home note)</label>
+          <label class="switch"><input type="checkbox" id="sc-train" ${this.train ? 'checked' : ''}>Loop and speed up (+4 bpm each time)</label>
         </div>
         <div class="row"><span class="lbl">Dots show</span>${seg('sc-lab', [['role', 'Role in the scale'], ['name', 'Note names']], this.labels)}</div>
       </div>
@@ -155,6 +164,7 @@ const Scales = {
     $('#sc-types', p).addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; this.scale = b.dataset.t; $$('#sc-types .chip', p).forEach((x) => x.setAttribute('aria-pressed', x === b)); this.pos = 1; this.update(); });
     $('#sc-play', p).addEventListener('click', () => (this.playing ? this.stop() : this.play()));
     $('#sc-bpm', p).addEventListener('input', (e) => { this.bpm = +e.target.value; $('#sc-bpm-o', p).textContent = this.bpm + ' bpm'; });
+    $('#sc-train', p).addEventListener('change', (e) => { this.train = e.target.checked; });
     $('#sc-drone', p).addEventListener('change', (e) => { this.drone = e.target.checked; this.drone ? Sound.droneOn(48 + this.root) : Sound.droneOff(); });
     wireSeg(p, 'sc-lab', (v) => { this.labels = v; this.draw(); });
     this.update();
@@ -223,7 +233,11 @@ const Scales = {
     const step = 60 / this.bpm / 2; // eighth notes
     seq.forEach((c, i) => Neck.play(c.s, c.f, i * step, 0.5));
     const btn = $('#sc-play', this.p); btn.innerHTML = `${ICONS.stop}Stop`;
-    this.playing = setTimeout(() => { this.playing = null; this.stop(); }, seq.length * step * 1000 + 300);
+    this.playing = setTimeout(() => {
+      this.playing = null;
+      if (this.train && current === this) { this.bpm = Math.min(240, this.bpm + 4); const sl = $('#sc-bpm', this.p); if (sl) { sl.value = this.bpm; $('#sc-bpm-o', this.p).textContent = this.bpm + ' bpm'; } this.play(); return; }
+      this.stop();
+    }, seq.length * step * 1000 + 300);
   },
   stop() {
     if (this.playing) { Sound.stopAll(); Neck.cancelPending(); }

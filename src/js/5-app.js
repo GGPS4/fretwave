@@ -216,6 +216,7 @@ const Progress = {
     const todayCount = S.daily.date === t ? S.daily.count : 0;
     p.innerHTML = `<div class="stats-grid">
         <div class="stat"><b style="color:var(--amber)">${currentStreak()}</b><span>Day streak</span></div>
+        <div class="stat"><b>${Object.keys(S.learn.done).length}<span class="muted" style="font-size:18px">/${allLessons().length}</span></b><span>Lessons finished</span></div>
         <div class="stat"><b>${todayCount}<span class="muted" style="font-size:18px">/${S.settings.goal}</span></b><span>Notes practiced today</span></div>
         <div class="stat"><b>${n ? Math.round(100 * ok / n) + '%' : '–'}</b><span>First-try accuracy</span></div>
         <div class="stat"><b>${ok ? (ms / ok / 1000).toFixed(1) + 's' : '–'}</b><span>Average time to answer</span></div>
@@ -250,80 +251,3 @@ const Progress = {
   },
 };
 
-/* ================= Settings ================= */
-function openSettings() {
-  const st = S.settings, body = $('#settings-body');
-  body.innerHTML = `
-    <div class="row"><span class="lbl">Instrument</span>${seg('st-inst', Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]), st.instrument)}</div>
-    <div class="row"><span class="lbl">Tuning</span><select id="st-tun" aria-label="Tuning">${Object.entries(inst().tunings).map(([k, v]) => `<option value="${k}" ${k === st.tuning ? 'selected' : ''}>${v.name}</option>`).join('')}</select></div>
-    <div class="row"><span class="lbl">Frets shown</span>${seg('st-frets', [['12', '12'], ['15', '15'], ['19', '19'], ['22', '22'], ['24', '24']], st.frets)}</div>
-    <div class="row"><span class="lbl">Accidentals</span>${seg('st-acc', [['sharp', 'Sharps (C♯)'], ['flat', 'Flats (D♭)']], st.accidentals)}</div>
-    <div class="row"><span class="lbl">Hand</span>${seg('st-hand', [['0', 'Right-handed'], ['1', 'Left-handed']], st.lefty ? '1' : '0')}</div>
-    <div class="row"><span class="lbl">Volume</span><div class="slider"><input type="range" min="0" max="1" step="0.05" value="${st.volume}" id="st-vol" aria-label="Volume"><output id="st-vol-o">${Math.round(st.volume * 100)}%</output></div></div>
-    <div class="row"><span class="lbl">Daily goal</span>${seg('st-goal', [['20', '20 notes'], ['40', '40 notes'], ['80', '80 notes'], ['150', '150 notes']], st.goal)}</div>
-    <div class="row"><span class="lbl">Voice</span><label class="switch"><input type="checkbox" id="st-speak" ${st.speak ? 'checked' : ''}>Say note names aloud</label></div>`;
-  const rebuild = () => { persist(); Neck.build(); remount(); };
-  wireSeg(body, 'st-inst', (v) => {
-    st.instrument = v; st.tuning = Object.keys(INSTRUMENTS[v].tunings)[0]; st.drill.strings = null; Sound.cache.clear();
-    $('#st-tun').innerHTML = Object.entries(inst().tunings).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join('');
-    rebuild();
-  });
-  $('#st-tun').addEventListener('change', (e) => { st.tuning = e.target.value; rebuild(); });
-  wireSeg(body, 'st-frets', (v) => { st.frets = +v; rebuild(); });
-  wireSeg(body, 'st-acc', (v) => { st.accidentals = v; rebuild(); });
-  wireSeg(body, 'st-hand', (v) => { st.lefty = v === '1'; rebuild(); });
-  wireSeg(body, 'st-goal', (v) => { st.goal = +v; persist(); renderDaily(); });
-  $('#st-vol').addEventListener('input', (e) => { st.volume = +e.target.value; $('#st-vol-o').textContent = Math.round(st.volume * 100) + '%'; Sound.setVolume(st.volume); persist(); });
-  $('#st-vol').addEventListener('change', () => Sound.play(57));
-  $('#st-speak').addEventListener('change', (e) => { st.speak = e.target.checked; persist(); syncTopButtons(); });
-  $('#settings').showModal();
-}
-
-/* ================= App shell ================= */
-const MODES = [Explore, Find, NameIt, Chords, Scales, Ear, Tuner, Progress];
-let current = null;
-function setMode(id) {
-  const m = MODES.find((x) => x.id === id) || Explore;
-  if (current && current.unmount) current.unmount();
-  Sound.stopAll(); Neck.cancelPending();
-  current = m; S.mode = m.id; S.settings.lastMode = m.id; persist();
-  $$('#nav .nav-btn').forEach((b) => b.setAttribute('aria-current', b.dataset.m === m.id ? 'page' : 'false'));
-  $('#mode-title').textContent = m.title; $('#mode-help').textContent = m.help;
-  $('#hud').innerHTML = '';
-  Neck.clear(); Neck.onCell = (s, f, e) => (m.onCell ? m.onCell(s, f, e) : Neck.play(s, f));
-  m.mount($('#panel'));
-  document.title = `${m.title}: Fretwave`;
-}
-function remount() { setMode(S.mode); }
-function renderDaily() {
-  const goal = S.settings.goal, count = S.daily.date === today() ? S.daily.count : 0;
-  const C = 2 * Math.PI * 26, pct = Math.min(1, count / goal);
-  $('#daily').innerHTML = `<svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/><circle cx="30" cy="30" r="26" fill="none" stroke="${pct >= 1 ? '#5ee6a8' : '#ffc857'}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}" style="transition:stroke-dashoffset .5s"/></svg><div class="daily-inner"><b>${count}</b><small>of ${goal}</small></div>`;
-  $('#daily').title = `${count} of ${goal} notes practiced today`;
-  const st = currentStreak();
-  $('#streak').innerHTML = st ? `${ICONS.flame}${st} day${st === 1 ? '' : 's'}` : '<span class="muted" style="font-size:11px">No streak yet</span>';
-}
-function syncTopButtons() {
-  $('#btn-sound').setAttribute('aria-pressed', S.settings.sound);
-  $('#btn-voice').setAttribute('aria-pressed', S.settings.speak);
-}
-function init() {
-  $('#nav').innerHTML = MODES.map((m) => `<button type="button" class="nav-btn" data-m="${m.id}">${ICONS[m.id === 'name' ? 'name' : m.id]}<span>${m.nav}</span></button>`).join('');
-  $('#nav').addEventListener('click', (e) => { const b = e.target.closest('.nav-btn'); if (b) setMode(b.dataset.m); });
-  $('#btn-sound').innerHTML = ICONS.sound; $('#btn-voice').innerHTML = ICONS.voice; $('#btn-settings').innerHTML = ICONS.settings;
-  $('#btn-sound').addEventListener('click', () => { S.settings.sound = !S.settings.sound; persist(); syncTopButtons(); if (S.settings.sound) Sound.play(57); else Sound.stopAll(); toast(S.settings.sound ? 'Sound on' : 'Sound off', 1000); });
-  $('#btn-voice').addEventListener('click', () => { S.settings.speak = !S.settings.speak; persist(); syncTopButtons(); if (S.settings.speak) Voice.say('Note names on'); toast(S.settings.speak ? 'Note names will be spoken' : 'Spoken note names off', 1200); });
-  $('#btn-settings').addEventListener('click', openSettings);
-  $('#settings-done').addEventListener('click', () => $('#settings').close());
-  document.addEventListener('keydown', (e) => {
-    if ($('#settings').open || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.target.closest('input, select, textarea')) return;
-    if (e.code === 'Space' && e.target.closest('button')) return;
-    if (current && current.onKey) current.onKey(e);
-  });
-  document.addEventListener('pointerdown', () => Sound.ensure(), { once: true });
-  syncTopButtons(); renderDaily();
-  Neck.init($('#neck'));
-  setMode(S.settings.lastMode || 'explore');
-}
-init();

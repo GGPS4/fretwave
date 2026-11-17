@@ -6,18 +6,48 @@ No sign-up, no install, no build step. It's one `index.html` you can host on Git
 
 ## What's inside
 
-| Mode | What it does |
-|---|---|
-| **Explore** | A realistic rosewood neck. Tap any fret to hear it and see every other spot with the exact same pitch. Show all notes, naturals only, one note at a time, or a blank neck to quiz yourself. |
-| **Find it** | The core fretboard drill: "Find C on the 5th string" or "Find every C". Choose strings, fret range and naturals vs. all 12 notes. Answer by tapping, or **play it on your real guitar** and the mic detects the pitch. |
-| **Name it** | A fret lights up and plays; name it on a color keyboard (or press A–G). Wrong guesses play your guess so you hear the difference. |
-| **Chords** | 13 chord types in every key. Shapes are generated for the current tuning, with tones colored by role (root, 3rd, 5th, 7th) across the whole neck. Strum, arpeggiate, and loop common progressions (I–V–vi–IV, ii–V–I…). |
-| **Scales** | 10 scales and modes, colored by scale degree, split into playable positions. Press play and follow the lights, with an optional root drone. |
-| **Ear** | Interval and chord-quality ear training. After each answer the neck draws the shape you just heard. Each interval comes with a song to remember it by. |
-| **Tuner** | Reference tones for each string plus a mic-based tuner with a needle dial. |
-| **Progress** | The neck turns into a heat map of your accuracy. Per-note accuracy bars, daily goal ring and day streak. "Smart order" in the games keeps bringing back your weak spots. |
+The app has four sections, each with a few pages, so there's never a wall of menus.
 
-Also: guitar, bass and ukulele; standard, drop D, half-step down, DADGAD, open G and open D tunings; 12–24 frets; left-handed mode; sharps or flats; keyboard shortcuts; works on phones (bottom tab bar, swipeable neck).
+### Learn
+| Page | What it does |
+|---|---|
+| **Path** | A guided course in 5 levels and 29 short lessons, from string names to the CAGED system. One "Up next" card always shows the next lesson; a roadmap bar shows where you are. The path is never locked, and every level has a "test out" quiz if you already know it. |
+| **Theory notes** | A guidebook for each level: the facts worth remembering about music theory and guitar theory, in one place. |
+| **Progress** | The neck as a heat map of your accuracy, accuracy per note, streaks and lessons finished. |
+
+Lessons are animated on the neck and read aloud (you can switch narration off). Each one ends with a check: tap the right fret, answer a quick question, name what you hear, play a sequence, or play a chord into the mic and get told which string needs work.
+
+The curriculum: **1 Meet the neck** (strings, musical alphabet, half and whole steps, notes on the low E and A strings, octave shapes, the 12th fret) · **2 Chords from scratch** (intervals, triads, major vs minor, E A D, G C Em Am, power chords, seventh chords) · **3 Keys and progressions** (major scale, keys, chords in a key, common progressions, circle of fifths, relative minor) · **4 Scales for soloing** (pentatonic shapes, blues scale, targeting chord tones, 3-notes-per-string major) · **5 See the whole neck** (CAGED, triads, modes, reading tab).
+
+### Practice
+**Find it** (find a named note on the neck, or play it on your guitar), **Name it** (name the lit-up fret), **Ear training** (intervals and chord qualities). Smart order keeps bringing back your weak spots.
+
+### Play (with your real guitar)
+| Page | What it does |
+|---|---|
+| **Jam room** | A synthesized band (drums, bass, chords) in pop, rock, 12-bar blues or minor ballad, in any key and tempo. The neck shows the scale with the current chord's notes lit up, and previews the next chord. Turn on the mic and it tells you whether each note you play fits. |
+| **Tab player** | Paste any ASCII guitar tab (or pick an example) and watch it play on the neck at 25%–150% speed, with looping, stepping, and the next note shown ahead of time. |
+| **Live view** | Play anything: notes light up where they live on the neck, chords get named, and it works out which key you seem to be playing in. |
+| **Chord check** | Strum a chord and see which notes rang out and which string to fix. Includes "one-minute changes" (switch between two chords as many times as you can, with your best score saved) and "name what I play". |
+
+### Tools
+**Neck** explorer, **Chords** (13 types, generated shapes, progressions, plus a **CAGED map**), **Scales** (10 scales by position, with a loop-and-speed-up trainer), **Tuner**. A **metronome** with tap tempo and a **speed trainer** lives in the top bar on every page.
+
+### Everywhere
+Guitar, bass and ukulele; six guitar tunings; 12–24 frets; left-handed mode; sharps or flats; spoken note names; keyboard shortcuts; phone layout with a bottom tab bar.
+
+## Install it as an app
+
+Fretwave is a Progressive Web App. On GitHub Pages, open **Settings → Sync and app → Install Fretwave** (or use your browser's "Install app" / "Add to Home Screen"). Once installed it works offline.
+
+**Daily reminders:** turn them on in the same tab. Notifications work best with the app installed in Chrome, Edge or on Android. For iPhone (and everyone else), **Add to my calendar** downloads a repeating daily practice event.
+
+## Sync across devices
+
+Two ways:
+
+1. **Progress code (no account):** Settings → Sync and app → *Copy my progress code*, then paste it on your other device. Progress is merged, never overwritten.
+2. **Google sign-in (optional):** create a free Firebase project and paste its config into `firebase-config.js`. The file has step-by-step instructions, including the Firestore security rules. Once that's filled in, a *Sign in with Google* button appears and progress syncs automatically.
 
 ## How the sound works
 
@@ -45,11 +75,18 @@ The source is split for readability:
 ```
 src/index.html     page shell
 src/styles.css     all styles
-src/js/1-core.js   music theory, state, audio engine, mic pitch detection
-src/js/2-neck.js   the fretboard renderer and chord-shape finder
-src/js/3-modes.js  Explore, Find it, Name it
-src/js/4-modes.js  Chords, Scales
-src/js/5-app.js    Ear, Tuner, Progress, Settings, app shell
+src/js/1-core.js        music theory, state, audio engine, mic pitch detection
+src/js/1b-audio.js      chord listening (chroma), drums/bass synth, metronome
+src/js/2-neck.js        the fretboard renderer and chord-shape finder
+src/js/3-modes.js       Explore, Find it, Name it
+src/js/4-modes.js       Chords, Scales
+src/js/5-app.js         Ear, Tuner, Progress
+src/js/7-learn.js       learning path, lesson player, checks, theory notes
+src/js/7b-curriculum.js the 29 lessons and level guidebooks
+src/js/8-play.js        CAGED map, Jam room, Tab player, Live view, Chord check
+src/js/9-sync.js        settings, progress codes, Google sync, install, reminders
+src/js/99-boot.js       app shell and navigation
+sw.js, manifest.webmanifest, icons/   installable app files
 ```
 
 After editing, rebuild the single-file `index.html`:

@@ -139,10 +139,16 @@ const S = {
   settings: Object.assign({}, DEFAULTS, saved.settings || {}),
   stats: saved.stats || {},
   daily: saved.daily || { date: '', count: 0, streak: 0, last: '' },
-  mode: 'explore',
+  learn: Object.assign({ done: {}, last: null, open: {} }, saved.learn || {}),
+  mode: 'path',
 };
 S.settings.drill = Object.assign({}, DEFAULTS.drill, S.settings.drill || {});
-function persist() { store.save({ settings: S.settings, stats: S.stats, daily: S.daily }); }
+function persist() {
+  store.save({ settings: S.settings, stats: S.stats, daily: S.daily, learn: S.learn });
+  if (typeof Sync !== 'undefined') Sync.queue();
+  clearTimeout(persist._t);
+  persist._t = setTimeout(() => { try { if ('caches' in window) caches.open('fretwave-state').then((c) => c.put('state.json', new Response(JSON.stringify({ last: S.daily.last, streak: S.daily.streak, reminder: S.settings.reminder || null })))).catch(() => {}); } catch (e) { /* no cache storage */ } }, 1500);
+}
 const inst = () => INSTRUMENTS[S.settings.instrument] || INSTRUMENTS.guitar;
 function tuning() {
   const t = inst().tunings;
@@ -296,25 +302,29 @@ function yin(buf, sr) {
 const Mic = {
   stream: null, an: null, buf: null, timer: null, cb: null, active: false,
   async start(cb) {
+    if (this.active) { this.cb = cb; return; }
     const ctx = Sound.ensure();
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('nomic');
     this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     const src = ctx.createMediaStreamSource(this.stream);
-    this.an = ctx.createAnalyser(); this.an.fftSize = 4096; src.connect(this.an);
-    this.buf = new Float32Array(this.an.fftSize); this.cb = cb; this.active = true;
+    this.an = ctx.createAnalyser(); this.an.fftSize = 16384; this.an.smoothingTimeConstant = 0.5; src.connect(this.an);
+    this.buf = new Float32Array(this.an.fftSize); this.freq = new Float32Array(this.an.frequencyBinCount);
+    this.cb = cb; this.active = true; this.chromaCb = null;
     this.timer = setInterval(() => this.tick(), 50);
   },
+  listen(cb) { this.cb = cb; },
   stop() {
-    clearInterval(this.timer); this.timer = null; this.active = false;
+    clearInterval(this.timer); this.timer = null; this.active = false; this.chromaCb = null; this.ignoreOwn = false;
     if (this.stream) this.stream.getTracks().forEach((t) => t.stop());
     this.stream = null;
   },
   tick() {
     if (!this.an) return;
     this.an.getFloatTimeDomainData(this.buf);
-    const r = yin(this.buf, Sound.ctx.sampleRate);
-    const quiet = performance.now() - Sound.lastPlay < 1300 || Voice.busy();
+    const r = yin(this.buf.subarray(this.buf.length - 4096), Sound.ctx.sampleRate);
+    const quiet = (performance.now() - Sound.lastPlay < 1300 && !this.ignoreOwn) || Voice.busy();
     if (this.cb) this.cb(quiet ? -1 : r.f, r.rms);
+    if (this.chromaCb) { this.an.getFloatFrequencyData(this.freq); this.chromaCb(quiet ? null : chromaOf(this.freq, Sound.ctx.sampleRate, this.an.fftSize), r.rms); }
   },
 };
 function micError(e) {

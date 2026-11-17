@@ -101,7 +101,7 @@ const Neck = {
       }
     });
     this.markers = new Map();
-    const wrap = svg.parentElement; if (wrap) wrap.style.minWidth = g.F > 15 ? '1180px' : g.F > 12 ? '960px' : '860px';
+    const wrap = svg.parentElement; if (wrap) { const k = window.innerWidth < 760 ? 0.78 : 1; wrap.style.minWidth = Math.round((g.F > 15 ? 1180 : g.F > 12 ? 960 : 860) * k) + 'px'; }
   },
   key: (s, f) => s + ':' + f,
   mark(s, f, o = {}) {

@@ -10,6 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231d1a3b'/%3E%3Cpath d='M8 38c6-14 12-14 16 0s10 14 16 0 10-14 16 0' fill='none' stroke='%23ffc857' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>:root {
   --velvet: #1d1a3b;
   --velvet-2: #26234d;
@@ -406,16 +410,234 @@ dialog select { background: var(--velvet-3); color: var(--pearl); border: 1px so
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
+/* ================= v2: sections, path, lessons, play ================= */
+[hidden] { display: none !important; }
+.subtabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 4px 0 6px; padding-bottom: 2px; }
+.subtab { flex-shrink: 0; border: 1px solid var(--line); background: transparent; color: var(--pearl-dim); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 15px; }
+.subtab:hover { color: var(--pearl); border-color: rgba(241,233,218,.3); }
+.subtab[aria-selected="true"] { background: var(--velvet-4); color: var(--pearl); border-color: transparent; }
+.nav-btn span { font-size: 12.5px; }
+
+/* metronome */
+.metro { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 6px 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--velvet-2); }
+.metro .m-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--velvet-4); }
+.metro .m-dot.beat { animation: mdot .22s ease-out; }
+.metro .m-dot.accent { background: var(--amber); }
+@keyframes mdot { from { background: var(--pearl); transform: scale(1.5); } }
+.metro button { border: 0; background: none; cursor: pointer; color: var(--pearl); display: flex; align-items: baseline; gap: 3px; padding: 6px; border-radius: 10px; }
+.metro button:hover { background: rgba(255,255,255,.06); }
+.metro .m-play svg { width: 16px; height: 16px; }
+.metro .m-bpm { font-family: var(--display); font-size: 17px; }
+.metro small { font-size: 11px; color: var(--pearl-dim); }
+.metro.running { border-color: rgba(255,200,87,.5); }
+.pop { position: fixed; inset: 74px 28px auto auto; margin: 0; z-index: 40; width: min(360px, calc(100vw - 24px)); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--velvet-2); color: var(--pearl); padding: 18px; display: none; }
+.pop[open] { display: grid; gap: 12px; }
+.pop h3 { margin: 0; font-family: var(--display); font-size: 22px; }
+.pop .btn { padding: 8px 12px; }
+
+/* rail level */
+.rail-level { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 70px; border: 0; background: none; color: var(--pearl-dim); cursor: pointer; padding: 6px 0; border-radius: 12px; }
+.rail-level:hover { background: rgba(255,255,255,.05); }
+.rail-level small { font-size: 11px; }
+.rl-bar { width: 52px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rl-bar i { display: block; height: 100%; background: var(--amber); }
+
+/* roadmap */
+.roadmap { display: flex; gap: 22px; align-items: center; }
+.rm-ring { position: relative; width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center; }
+.rm-ring svg { position: absolute; inset: 0; }
+.rm-ring > div { display: flex; flex-direction: column; align-items: center; line-height: 1.05; }
+.rm-ring b { font-family: var(--display); font-size: 24px; }
+.rm-ring small { font-size: 12px; color: var(--pearl-dim); }
+.rm-track { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.rm-seg { position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; border: 1px solid var(--line); background: rgba(0,0,0,.18); color: var(--pearl-dim); border-radius: 16px; padding: 12px 12px 10px; cursor: pointer; min-width: 0; }
+.rm-seg:hover { border-color: rgba(241,233,218,.3); }
+.rm-seg.here { border-color: var(--amber); color: var(--pearl); background: rgba(255,200,87,.07); }
+.rm-seg.full .rm-bar i { background: var(--good); }
+.rm-bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rm-bar i { display: block; height: 100%; background: var(--amber); border-radius: 4px; transition: width .6s; }
+.rm-name { font-size: 13.5px; line-height: 1.25; color: var(--pearl); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rm-name b { font-family: var(--display); color: var(--amber); margin-right: 3px; }
+.rm-rank { font-size: 11.5px; }
+.rm-pin { position: absolute; top: -11px; right: 10px; font-size: 11px; font-weight: 700; background: var(--amber); color: #2a1f05; padding: 2px 8px; border-radius: 99px; }
+
+.next-card { display: flex; align-items: center; gap: 20px; padding: 22px; border-radius: var(--r-lg); background: linear-gradient(120deg, rgba(255,255,255,.04), transparent), var(--velvet-2); border: 1px solid var(--line); box-shadow: inset 4px 0 0 var(--c); }
+.nc-icon { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; background: var(--c); color: var(--velvet); flex-shrink: 0; }
+.nc-icon svg { width: 34px; height: 34px; }
+.nc-txt { flex: 1; min-width: 0; }
+.nc-txt small { color: var(--pearl-dim); font-size: 13px; }
+.nc-txt h2 { margin: 2px 0 4px; font-family: var(--display); font-size: 28px; letter-spacing: -0.01em; line-height: 1.1; }
+.nc-txt p { margin: 0; color: var(--pearl-dim); }
+
+.levels { display: grid; gap: 14px; }
+.level { border: 1px solid var(--line); border-radius: var(--r-lg); background: rgba(0,0,0,.12); }
+.level.current { border-color: rgba(255,200,87,.35); }
+.lv-head { display: flex; gap: 16px; align-items: center; padding: 16px 18px; flex-wrap: wrap; }
+.lv-num { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--velvet-3); font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--amber); flex-shrink: 0; }
+.lv-num svg { width: 24px; height: 24px; color: var(--good); }
+.lv-num.small { width: 32px; height: 32px; border-radius: 10px; font-size: 16px; }
+.lv-txt { flex: 1; min-width: 220px; }
+.lv-txt small { color: var(--pearl-dim); font-size: 12.5px; }
+.lv-txt h3 { margin: 0; font-family: var(--display); font-size: 23px; }
+.lv-txt p { margin: 2px 0 0; color: var(--pearl-dim); font-size: 14.5px; }
+.lv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.lv-count { font-family: var(--display); font-weight: 700; }
+.lv-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.lv-actions .chip { font-size: 13.5px; padding: 6px 11px; }
+.chip svg { width: 15px; height: 15px; }
+.nodes { display: grid; gap: 4px; padding: 34px 18px 22px; }
+.node-row { display: flex; align-items: center; gap: 16px; margin-left: calc(50% - 160px + var(--off) * 46px); }
+.node { position: relative; width: 66px; height: 66px; border-radius: 50%; border: 0; cursor: pointer; flex-shrink: 0; display: grid; place-items: center; color: var(--pearl-dim); background: var(--velvet-3); box-shadow: inset 0 -5px 0 rgba(0,0,0,.25); transition: transform .12s; }
+.node svg { width: 30px; height: 30px; }
+.node:hover { transform: translateY(-2px); }
+.node.done { background: var(--c); color: var(--velvet); }
+.node.next { background: var(--c); color: var(--velvet); box-shadow: 0 0 0 6px rgba(255,255,255,.07), 0 0 0 10px color-mix(in srgb, var(--c) 35%, transparent), 0 0 36px -4px var(--c); animation: nodePulse 2s ease-in-out infinite; }
+@keyframes nodePulse { 50% { transform: scale(1.06); } }
+.node-go { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); background: var(--pearl); color: var(--velvet); font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.node-label { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.node-label b { font-size: 15.5px; }
+.node-label span { font-size: 12.5px; color: var(--pearl-dim); }
+.stars { display: inline-flex; gap: 2px; }
+.stars i, .stars span { color: rgba(255,255,255,.15); display: inline-flex; }
+.stars i svg { width: 14px; height: 14px; }
+.stars .on { color: var(--amber); }
+.stars.big span svg { width: 54px; height: 54px; }
+.stars.big span.on { animation: starIn .5s cubic-bezier(.2,.9,.3,1.5) both; }
+.stars.big span:nth-child(2) { animation-delay: .15s; } .stars.big span:nth-child(3) { animation-delay: .3s; }
+@keyframes starIn { from { transform: scale(0) rotate(-40deg); } }
+
+/* lesson player */
+.lesson-hud { display: flex; align-items: center; gap: 14px; width: 100%; }
+.lesson-title { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.lesson-title small { color: var(--pearl-dim); font-size: 12.5px; }
+.lesson-title b { font-family: var(--display); font-size: 22px; }
+.lp-dots { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.lp-dots i { width: 26px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); }
+.lp-dots i.chk { width: 12px; }
+.lp-dots i.done { background: var(--good); }
+.lp-dots i.now { background: var(--amber); }
+.lesson-card { background: var(--velvet-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px 24px; display: grid; gap: 14px; max-width: 980px; }
+.lesson-text { margin: 0; font-size: 20px; line-height: 1.5; max-width: 68ch; }
+.lesson-text b { color: var(--amber); font-weight: 700; }
+.lesson-check:empty { display: none; }
+.lesson-nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lesson-spacer { flex: 1; }
+.btn-quiet { background: transparent; border-color: transparent; color: var(--pearl-dim); font-weight: 500; }
+.btn-quiet:hover { background: rgba(255,255,255,.05); }
+.check-q { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: rgba(0,0,0,.22); }
+.check-q > svg { width: 26px; height: 26px; color: var(--amber); flex-shrink: 0; margin-top: 2px; }
+.check-q b { font-size: 17px; display: inline; }
+.check-q small { display: block; color: var(--pearl-dim); font-size: 13.5px; margin-top: 2px; }
+.check-count { margin-left: 8px; font-size: 12px; color: var(--pearl-dim); background: rgba(255,255,255,.07); padding: 1px 8px; border-radius: 99px; }
+.check-ok { display: flex; gap: 10px; align-items: center; color: var(--good); font-weight: 700; font-size: 17px; padding: 10px 0; }
+.check-ok svg { width: 26px; height: 26px; }
+.check-why { margin: 0; color: var(--pearl-dim); font-size: 14.5px; }
+.answers.quiz { margin-top: 10px; }
+.inline-note { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 99px; color: var(--velvet); font-family: var(--display); font-weight: 800; margin: 0 2px; }
+.seq-dots { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+.seq-dots i { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.08); border: 2px solid transparent; }
+.seq-dots i.now { border-color: var(--amber); }
+.done-card { text-align: center; justify-items: center; padding: 34px; }
+.done-card h2 { margin: 6px 0 0; font-family: var(--display); font-size: 34px; }
+.done-card p { margin: 0; }
+.tone-row { display: flex; gap: 8px; flex-wrap: wrap; }
+pre.tab { margin: 0; padding: 14px 16px; border-radius: 14px; background: rgba(0,0,0,.28); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; line-height: 1.45; overflow-x: auto; color: var(--pearl); }
+.circle5 { width: 260px; max-width: 100%; }
+.chroma { display: grid; grid-template-columns: repeat(12, 1fr); gap: 5px; height: 120px; align-items: end; margin-top: 10px; }
+.chroma.big { height: 200px; }
+.chroma .cb { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.chroma .cb i { width: 100%; max-width: 30px; height: 6%; border-radius: 6px 6px 3px 3px; background: var(--c); opacity: .85; transition: height .1s; }
+.chroma .cb span { font-size: 12px; font-weight: 700; color: var(--pearl-dim); }
+.chroma .cb.want span { color: var(--pearl); }
+.chroma .cb.want i { outline: 2px solid var(--pearl); outline-offset: 2px; }
+
+/* guidebooks */
+.guides { display: grid; gap: 12px; }
+details.guide { border: 1px solid var(--line); border-radius: var(--r-lg); background: rgba(0,0,0,.12); }
+details.guide summary { display: flex; gap: 14px; align-items: center; padding: 16px 18px; cursor: pointer; list-style: none; }
+details.guide summary::-webkit-details-marker { display: none; }
+details.guide summary b { display: block; font-family: var(--display); font-size: 21px; }
+details.guide summary small { color: var(--pearl-dim); }
+.guide-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 0 18px 18px; }
+.g-item { background: var(--velvet-2); border-radius: 16px; padding: 14px 16px; }
+.g-item h4 { margin: 0 0 6px; font-family: var(--display); font-size: 17px; color: var(--amber); }
+.g-item div { font-size: 14.5px; line-height: 1.55; color: var(--pearl); }
+.g-lessons { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.g-lessons .chip svg { color: var(--good); }
+
+/* jam */
+.jam-now { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; }
+.jam-chord { font-family: var(--display); font-weight: 800; font-size: clamp(64px, 8vw, 104px); line-height: .9; letter-spacing: -0.03em; }
+.jam-next { font-family: var(--display); font-weight: 700; font-size: 36px; color: var(--pearl-dim); }
+.beats { display: flex; gap: 8px; margin-left: auto; padding-bottom: 10px; }
+.beats i { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.1); transition: background .08s; }
+.beats i.on { background: var(--amber); box-shadow: 0 0 14px var(--amber); }
+.beats i:first-child.on { background: var(--pearl); }
+.prog .prog-card { cursor: default; }
+#jm-bars .prog-card { min-width: 70px; padding: 8px 12px; }
+#jm-bars .prog-card b { font-size: 19px; }
+
+/* tabs */
+.tab-view { border-radius: 16px; background: rgba(0,0,0,.28); overflow-x: auto; }
+.tab-view pre { margin: 0; padding: 16px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 16px; line-height: 1.5; color: var(--pearl-dim); }
+.tab-view span { color: var(--pearl); border-radius: 4px; }
+.tab-view span.on { background: var(--amber); color: #2a1f05; box-shadow: 0 0 0 3px var(--amber); }
+textarea { width: 100%; background: rgba(0,0,0,.25); color: var(--pearl); border: 1px solid var(--line); border-radius: 14px; padding: 12px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; resize: vertical; }
+input[type="time"] { background: var(--velvet-3); color: var(--pearl); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; color-scheme: dark; }
+
+/* live + check */
+.live-top { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+.history { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; min-height: 40px; }
+.history .note-chip { width: 36px; height: 36px; font-size: 13px; cursor: default; }
+.changes { display: flex; gap: 30px; }
+.changes div { display: flex; flex-direction: column; }
+.changes b { font-family: var(--display); font-size: 56px; line-height: 1; }
+.changes span { color: var(--pearl-dim); font-size: 13px; }
+#neck .caged-label { font-family: var(--display); font-weight: 800; font-size: 13px; }
+.mk.seqhint .body { stroke-dasharray: 3 3; stroke: rgba(241,233,218,.6); }
+
+@media (max-width: 1080px) { .rm-track { grid-template-columns: repeat(5, minmax(120px, 1fr)); overflow-x: auto; } }
+@media (max-width: 760px) {
+  .roadmap { flex-direction: column; align-items: stretch; }
+  .rm-ring { margin: 0 auto; }
+  .rm-track { display: flex; overflow-x: auto; padding-top: 12px; }
+  .rm-seg { min-width: 150px; }
+  .next-card { flex-direction: column; align-items: flex-start; }
+  .node-row { margin-left: calc(14px + (var(--off) + 2) * 14px); }
+  .lesson-text { font-size: 17.5px; }
+  .lesson-card { padding: 18px; }
+  .lp-dots { display: none; }
+  .metro { padding: 0 4px 0 8px; }
+  .metro small { display: none; }
+  .pop { inset: auto 12px 90px 12px; width: auto; }
+  .top-actions { gap: 6px; }
+  .changes b { font-size: 42px; }
+  .jam-next { font-size: 26px; }
+}
+@media (max-width: 760px) {
+  html, body { overflow-x: hidden; }
+  .topbar { flex-direction: column-reverse; gap: 10px; }
+  .top-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .roadmap, .rm-track, .levels, .level, .next-card { min-width: 0; max-width: 100%; }
+  .rm-track { width: 100%; }
+  .lv-meta { align-items: flex-start; width: 100%; }
+  .lv-actions { justify-content: flex-start; }
+  .lv-txt { min-width: 0; }
+  .panel > *, .panel-grid > * { min-width: 0; }
+}
+.node-row:has(.node.next) { margin-top: 22px; }
 </style>
 </head>
 <body>
 <div class="app">
-  <nav class="rail" aria-label="Practice modes">
+  <nav class="rail" aria-label="Sections">
     <div class="logo" title="Fretwave">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#26234d"/><path d="M14 18v28M26 18v28M38 18v28M50 18v28" stroke="#c9ced6" stroke-width="2" opacity=".5"/><path d="M6 36c6-14 11-14 15 0s10 14 15 0 10-14 15 0 6 6 8 4" fill="none" stroke="#ffc857" stroke-width="4.5" stroke-linecap="round"/><circle cx="21" cy="36" r="5" fill="#ff7b54"/><circle cx="43" cy="30" r="5" fill="#5aa9ff"/></svg>
     </div>
     <div id="nav"></div>
     <div class="rail-foot">
+      <button class="rail-level" id="rail-level" type="button"></button>
       <div class="daily" id="daily" title="Notes practiced today"></div>
       <div class="streak" id="streak"></div>
     </div>
@@ -423,16 +645,18 @@ dialog select { background: var(--velvet-3); color: var(--pearl); border: 1px so
   <main>
     <header class="topbar">
       <div>
-        <h1 id="mode-title">Explore the neck</h1>
+        <h1 id="mode-title">Your learning path</h1>
         <p id="mode-help"></p>
       </div>
       <div class="top-actions">
+        <div class="metro" id="metro"></div>
         <button class="icon-btn" id="btn-sound" aria-pressed="true" aria-label="Sound" title="Sound on or off"></button>
         <button class="icon-btn" id="btn-voice" aria-pressed="true" aria-label="Say note names aloud" title="Say note names aloud"></button>
         <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"></button>
       </div>
     </header>
-    <section class="stage">
+    <nav class="subtabs" id="subtabs" role="tablist" aria-label="Pages in this section"></nav>
+    <section class="stage" id="stage">
       <div class="hud" id="hud" aria-live="polite"></div>
       <div class="neck-scroll"><div class="neck-wrap"><svg id="neck" role="img" aria-label="Interactive fretboard"></svg></div></div>
       <p class="rotate-hint">Swipe the neck sideways for higher frets, or turn your phone for the full view.</p>
@@ -446,7 +670,9 @@ dialog select { background: var(--velvet-3); color: var(--pearl); border: 1px so
   <div class="controls" id="settings-body"></div>
   <div class="dlg-foot"><button class="btn btn-primary" id="settings-done">Done</button></div>
 </dialog>
+<dialog id="metro-pop" class="pop"></dialog>
 <div class="toast" id="toast" role="status"></div>
+<script src="firebase-config.js"></script>
 <script>'use strict';
 /* ================= Utilities ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -588,10 +814,16 @@ const S = {
   settings: Object.assign({}, DEFAULTS, saved.settings || {}),
   stats: saved.stats || {},
   daily: saved.daily || { date: '', count: 0, streak: 0, last: '' },
-  mode: 'explore',
+  learn: Object.assign({ done: {}, last: null, open: {} }, saved.learn || {}),
+  mode: 'path',
 };
 S.settings.drill = Object.assign({}, DEFAULTS.drill, S.settings.drill || {});
-function persist() { store.save({ settings: S.settings, stats: S.stats, daily: S.daily }); }
+function persist() {
+  store.save({ settings: S.settings, stats: S.stats, daily: S.daily, learn: S.learn });
+  if (typeof Sync !== 'undefined') Sync.queue();
+  clearTimeout(persist._t);
+  persist._t = setTimeout(() => { try { if ('caches' in window) caches.open('fretwave-state').then((c) => c.put('state.json', new Response(JSON.stringify({ last: S.daily.last, streak: S.daily.streak, reminder: S.settings.reminder || null })))).catch(() => {}); } catch (e) { /* no cache storage */ } }, 1500);
+}
 const inst = () => INSTRUMENTS[S.settings.instrument] || INSTRUMENTS.guitar;
 function tuning() {
   const t = inst().tunings;
@@ -745,25 +977,29 @@ function yin(buf, sr) {
 const Mic = {
   stream: null, an: null, buf: null, timer: null, cb: null, active: false,
   async start(cb) {
+    if (this.active) { this.cb = cb; return; }
     const ctx = Sound.ensure();
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('nomic');
     this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     const src = ctx.createMediaStreamSource(this.stream);
-    this.an = ctx.createAnalyser(); this.an.fftSize = 4096; src.connect(this.an);
-    this.buf = new Float32Array(this.an.fftSize); this.cb = cb; this.active = true;
+    this.an = ctx.createAnalyser(); this.an.fftSize = 16384; this.an.smoothingTimeConstant = 0.5; src.connect(this.an);
+    this.buf = new Float32Array(this.an.fftSize); this.freq = new Float32Array(this.an.frequencyBinCount);
+    this.cb = cb; this.active = true; this.chromaCb = null;
     this.timer = setInterval(() => this.tick(), 50);
   },
+  listen(cb) { this.cb = cb; },
   stop() {
-    clearInterval(this.timer); this.timer = null; this.active = false;
+    clearInterval(this.timer); this.timer = null; this.active = false; this.chromaCb = null; this.ignoreOwn = false;
     if (this.stream) this.stream.getTracks().forEach((t) => t.stop());
     this.stream = null;
   },
   tick() {
     if (!this.an) return;
     this.an.getFloatTimeDomainData(this.buf);
-    const r = yin(this.buf, Sound.ctx.sampleRate);
-    const quiet = performance.now() - Sound.lastPlay < 1300 || Voice.busy();
+    const r = yin(this.buf.subarray(this.buf.length - 4096), Sound.ctx.sampleRate);
+    const quiet = (performance.now() - Sound.lastPlay < 1300 && !this.ignoreOwn) || Voice.busy();
     if (this.cb) this.cb(quiet ? -1 : r.f, r.rms);
+    if (this.chromaCb) { this.an.getFloatFrequencyData(this.freq); this.chromaCb(quiet ? null : chromaOf(this.freq, Sound.ctx.sampleRate, this.an.fftSize), r.rms); }
   },
 };
 function micError(e) {
@@ -771,6 +1007,177 @@ function micError(e) {
     ? 'Microphone access was blocked. Allow it in your browser’s site settings, then try again.'
     : 'The microphone is blocked on this page. Open Fretwave from its own site (your GitHub Pages link) to play along on your real guitar.';
   toast(msg, 4200);
+}
+
+/* ================= Listening: pitch-class energy (chroma) + chord matching ================= */
+function chromaOf(db, sr, fftSize) {
+  const out = new Float32Array(12);
+  const binHz = sr / fftSize;
+  const lo = Math.floor(70 / binHz), hi = Math.min(db.length - 2, Math.ceil(1500 / binHz));
+  let peak = -Infinity;
+  for (let i = lo; i <= hi; i++) if (db[i] > peak) peak = db[i];
+  if (peak < -78) return null; // silence
+  const floor = peak - 38;
+  for (let i = lo + 1; i < hi; i++) {
+    const v = db[i];
+    if (v < floor || v < db[i - 1] || v < db[i + 1]) continue; // local spectral peaks only
+    const f = i * binHz;
+    const midi = 69 + 12 * Math.log2(f / 440);
+    const pc = mod(Math.round(midi), 12);
+    const mag = Math.pow(10, (v - peak) / 20);
+    out[pc] += mag / (1 + f / 900);
+  }
+  let mx = 0; for (let i = 0; i < 12; i++) mx = Math.max(mx, out[i]);
+  if (!mx) return null;
+  for (let i = 0; i < 12; i++) out[i] /= mx;
+  return out;
+}
+const MATCH_TYPES = ['maj', 'min', '7', 'maj7', 'm7', 'sus2', 'sus4', 'dim', '5'];
+function matchChord(chroma) {
+  if (!chroma) return null;
+  let best = null;
+  const norm = Math.sqrt(chroma.reduce((a, b) => a + b * b, 0)) || 1;
+  for (let r = 0; r < 12; r++) for (const id of MATCH_TYPES) {
+    const t = chordType(id); const pcs = new Set(t.iv.map((i) => mod(r + i, 12)));
+    let dot = 0, tn = 0;
+    for (let pc = 0; pc < 12; pc++) { const w = pcs.has(pc) ? (pc === r ? 1.25 : 1) : 0; dot += w * chroma[pc]; tn += w * w; }
+    let score = dot / (norm * Math.sqrt(tn));
+    if (id === '5') score -= 0.04; if (t.iv.length > 3) score -= 0.02; // prefer simple names on ties
+    if (!best || score > best.score) best = { root: r, id, score };
+  }
+  return best;
+}
+// how well a heard chroma matches an expected set of pitch classes
+function checkChord(chroma, pcs) {
+  if (!chroma) return null;
+  const missing = pcs.filter((pc) => chroma[pc] < 0.22);
+  const extra = [];
+  for (let pc = 0; pc < 12; pc++) if (!pcs.includes(pc) && chroma[pc] > 0.55) extra.push(pc);
+  return { ok: !missing.length && extra.length <= 1, missing, extra };
+}
+
+/* ================= More sounds: clicks, drums, bass ================= */
+Object.assign(Sound, {
+  noise: null,
+  noiseBuf() {
+    if (this.noise) return this.noise;
+    const ctx = this.ctx, len = ctx.sampleRate; const b = ctx.createBuffer(1, len, ctx.sampleRate); const d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return (this.noise = b);
+  },
+  env(g, t, peak, decay) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + decay); },
+  click(t, accent) {
+    if (!S.settings.sound) return; const ctx = this.ensure(); if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = accent ? 1760 : 1175;
+    this.env(g, t, accent ? 0.22 : 0.13, 0.05); o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.07);
+  },
+  kick(t, v = 1) {
+    if (!S.settings.sound) return; const ctx = this.ctx; const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    this.env(g, t, 0.9 * v, 0.32); o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.35);
+  },
+  snare(t, v = 1) {
+    if (!S.settings.sound) return; const ctx = this.ctx; const n = ctx.createBufferSource(); n.buffer = this.noiseBuf();
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400;
+    const g = ctx.createGain(); this.env(g, t, 0.42 * v, 0.17); n.connect(hp); hp.connect(g); g.connect(this.master); n.start(t); n.stop(t + 0.2);
+    const o = ctx.createOscillator(), g2 = ctx.createGain(); o.frequency.value = 190; this.env(g2, t, 0.25 * v, 0.08); o.connect(g2); g2.connect(this.master); o.start(t); o.stop(t + 0.1);
+  },
+  hat(t, v = 1, open) {
+    if (!S.settings.sound) return; const ctx = this.ctx; const n = ctx.createBufferSource(); n.buffer = this.noiseBuf();
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7500;
+    const g = ctx.createGain(); this.env(g, t, 0.13 * v, open ? 0.22 : 0.045); n.connect(hp); hp.connect(g); g.connect(this.master); n.start(t); n.stop(t + 0.25);
+  },
+  bass(midi, t, dur) {
+    if (!S.settings.sound) return; const ctx = this.ctx; const o = ctx.createOscillator(), o2 = ctx.createOscillator();
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(240, t + 0.25);
+    const g = ctx.createGain(); o.type = 'triangle'; o2.type = 'sawtooth'; o.frequency.value = o2.frequency.value = freqOf(midi);
+    const g2 = ctx.createGain(); g2.gain.value = 0.25;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.42, t + 0.01); g.gain.setValueAtTime(0.42, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(this.master);
+    o.start(t); o2.start(t); o.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+  },
+  // strum a voicing at an absolute audio time without touching the neck
+  strumAt(frets, t, up, gain = 0.3) {
+    const order = frets.map((f, s) => ({ f, s })).filter((x) => x.f >= 0); if (up) order.reverse();
+    const base = this.ctx.currentTime;
+    order.forEach((x, i) => this.play(strings()[x.s] + x.f, Math.max(0, t - base + i * 0.018), gain));
+  },
+});
+
+/* ================= Metronome (global) with speed trainer ================= */
+const Metro = {
+  on: false, bpm: 90, beats: 4, beat: 0, next: 0, timer: null, listeners: new Set(),
+  trainer: { on: false, step: 4, every: 2, target: 140, bars: 0 },
+  start() {
+    const ctx = Sound.ensure(); if (!ctx) return;
+    this.on = true; this.beat = 0; this.next = ctx.currentTime + 0.08; this.trainer.bars = 0;
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 25); renderMetro();
+  },
+  stop() { this.on = false; clearInterval(this.timer); renderMetro(); },
+  toggle() { this.on ? this.stop() : this.start(); },
+  setBpm(v) { this.bpm = clamp(Math.round(v), 30, 260); renderMetro(); },
+  tick() {
+    const ctx = Sound.ctx;
+    while (this.next < ctx.currentTime + 0.12) {
+      const b = this.beat, t = this.next;
+      Sound.click(t, b === 0);
+      const delay = Math.max(0, (t - ctx.currentTime) * 1000);
+      setTimeout(() => { pulseMetro(b === 0); this.listeners.forEach((fn) => fn(b)); }, delay);
+      this.next += 60 / this.bpm;
+      this.beat = (this.beat + 1) % this.beats;
+      if (this.beat === 0 && this.trainer.on) {
+        this.trainer.bars++;
+        if (this.trainer.bars % this.trainer.every === 0 && this.bpm < this.trainer.target) {
+          this.bpm = Math.min(this.trainer.target, this.bpm + this.trainer.step);
+          setTimeout(() => { renderMetro(); toast(`Tempo up: ${this.bpm} bpm`, 1100); }, delay);
+        }
+      }
+    }
+  },
+};
+function renderMetro() {
+  const box = $('#metro'); if (!box) return;
+  box.querySelector('.m-bpm').textContent = Metro.bpm;
+  box.querySelector('.m-play').innerHTML = Metro.on ? ICONS.stop : ICONS.play;
+  box.querySelector('.m-play').setAttribute('aria-label', Metro.on ? 'Stop metronome' : 'Start metronome');
+  box.classList.toggle('running', Metro.on);
+  const pop = $('#metro-pop'); if (pop && pop.open) syncMetroPop();
+}
+function pulseMetro(accent) {
+  const d = $('#metro .m-dot'); if (!d) return;
+  d.classList.remove('beat', 'accent'); void d.offsetWidth; d.classList.add('beat'); if (accent) d.classList.add('accent');
+}
+function syncMetroPop() {
+  const p = $('#metro-pop');
+  $('#mp-bpm', p).value = Metro.bpm; $('#mp-bpm-o', p).textContent = Metro.bpm + ' bpm';
+  $('#mp-train', p).checked = Metro.trainer.on;
+  $('#mp-target', p).value = Metro.trainer.target; $('#mp-target-o', p).textContent = Metro.trainer.target + ' bpm';
+}
+function initMetro() {
+  const box = $('#metro');
+  box.innerHTML = `<span class="m-dot" aria-hidden="true"></span><button class="m-play" type="button" aria-label="Start metronome">${ICONS.play}</button><button class="m-open" type="button" aria-label="Metronome settings"><b class="m-bpm">${Metro.bpm}</b><small>bpm</small></button>`;
+  $('.m-play', box).addEventListener('click', () => Metro.toggle());
+  const pop = $('#metro-pop');
+  pop.innerHTML = `<h3>Metronome</h3>
+    <div class="slider"><input type="range" min="30" max="260" id="mp-bpm" aria-label="Tempo"><output id="mp-bpm-o"></output></div>
+    <div class="wrap"><button class="btn" data-d="-5">−5</button><button class="btn" data-d="-1">−1</button><button class="btn" data-d="1">+1</button><button class="btn" data-d="5">+5</button><button class="btn" id="mp-tap">Tap tempo</button></div>
+    <div>${seg('mp-beats', [['2', '2/4'], ['3', '3/4'], ['4', '4/4'], ['6', '6/8']], Metro.beats)}</div>
+    <label class="switch"><input type="checkbox" id="mp-train">Speed trainer: speed up as I go</label>
+    <div class="slider"><span class="muted" style="font-size:13px">Up to</span><input type="range" min="60" max="260" id="mp-target" aria-label="Target tempo"><output id="mp-target-o"></output></div>
+    <p class="muted" style="font-size:13px;margin:0">Adds 4 bpm every 2 bars until it reaches your target. Great for scales and chord changes.</p>`;
+  $('.m-open', box).addEventListener('click', (e) => { if (pop.open) pop.close(); else { syncMetroPop(); pop.show(); } e.stopPropagation(); });
+  document.addEventListener('pointerdown', (e) => { if (pop.open && !pop.contains(e.target) && !box.contains(e.target)) pop.close(); });
+  $('#mp-bpm', pop).addEventListener('input', (e) => Metro.setBpm(+e.target.value));
+  $$('[data-d]', pop).forEach((b) => b.addEventListener('click', () => Metro.setBpm(Metro.bpm + +b.dataset.d)));
+  let taps = [];
+  $('#mp-tap', pop).addEventListener('click', () => {
+    const now = performance.now(); taps = taps.filter((t) => now - t < 2500); taps.push(now);
+    if (taps.length >= 2) { const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1); Metro.setBpm(60000 / iv); }
+  });
+  wireSeg(pop, 'mp-beats', (v) => { Metro.beats = +v; Metro.beat = 0; });
+  $('#mp-train', pop).addEventListener('change', (e) => { Metro.trainer.on = e.target.checked; Metro.trainer.bars = 0; if (Metro.trainer.on && Metro.trainer.target <= Metro.bpm) Metro.trainer.target = Math.min(260, Metro.bpm + 40); syncMetroPop(); });
+  $('#mp-target', pop).addEventListener('input', (e) => { Metro.trainer.target = +e.target.value; $('#mp-target-o', pop).textContent = Metro.trainer.target + ' bpm'; });
+  renderMetro();
 }
 
 /* ================= The fretboard ================= */
@@ -876,7 +1283,7 @@ const Neck = {
       }
     });
     this.markers = new Map();
-    const wrap = svg.parentElement; if (wrap) wrap.style.minWidth = g.F > 15 ? '1180px' : g.F > 12 ? '960px' : '860px';
+    const wrap = svg.parentElement; if (wrap) { const k = window.innerWidth < 760 ? 0.78 : 1; wrap.style.minWidth = Math.round((g.F > 15 ? 1180 : g.F > 12 ? 960 : 860) * k) + 'px'; }
   },
   key: (s, f) => s + ':' + f,
   mark(s, f, o = {}) {
@@ -1501,6 +1908,7 @@ const Chords = {
           <button class="btn" id="ch-arp">${ICONS.play}One string at a time</button>
           <label class="switch" style="margin-left:6px"><input type="checkbox" id="ch-all" ${this.showAll ? 'checked' : ''}>Show chord tones on the whole neck</label>
         </div>
+        <div class="wrap"><label class="switch"><input type="checkbox" id="ch-caged" ${this.caged ? 'checked' : ''}>CAGED map (major chords)</label><span id="ch-cagedbtns" class="wrap"></span></div>
         <div class="legend" id="ch-legend"></div>
       </div>
       <div class="controls">
@@ -1519,6 +1927,7 @@ const Chords = {
     $('#ch-strum', p).addEventListener('click', () => this.v && strum(this.v.frets));
     $('#ch-arp', p).addEventListener('click', () => this.v && strum(this.v.frets, { arp: true }));
     $('#ch-all', p).addEventListener('change', (e) => { this.showAll = e.target.checked; this.draw(); });
+    $('#ch-caged', p).addEventListener('change', (e) => { this.caged = e.target.checked; if (this.caged && this.type !== 'maj') { this.type = 'maj'; $$('#ch-types .chip', p).forEach((x) => x.setAttribute('aria-pressed', x.dataset.t === 'maj')); this.update(false); } else this.draw(); });
     wireSeg(p, 'ch-prog', (v) => { this.prog = v; this.stopLoop(); this.renderProg(); });
     $('#ch-loop', p).addEventListener('click', () => (this.loop ? this.stopLoop() : this.startLoop()));
     $('#ch-bpm', p).addEventListener('input', (e) => { this.bpm = +e.target.value; $('#ch-bpm-o', p).textContent = this.bpm + ' bpm'; });
@@ -1546,6 +1955,12 @@ const Chords = {
     if (this.v) Neck.scrollTo(Math.max(0, this.v.base + 1));
   },
   draw(v = this.v, root = this.root, iv = chordType(this.type).iv) {
+    const cb = this.p && $('#ch-cagedbtns', this.p); if (cb) cb.innerHTML = '';
+    if (this.caged && this.type === 'maj' && root === this.root && v === this.v) {
+      const shapes = Neck.caged(root);
+      if (cb && shapes.length) { cb.innerHTML = shapes.filter((sh) => sh.hi <= S.settings.frets).map((sh) => `<button class="chip" data-sh="${sh.name}" style="border-color:${sh.color}">${sh.name} shape</button>`).join(''); $$('[data-sh]', cb).forEach((b) => b.addEventListener('click', () => { const sh = shapes.find((x) => x.name === b.dataset.sh); Neck.caged(root, { only: sh.name }); strum(sh.frets); Neck.scrollTo(sh.lo + 1); })); }
+      return;
+    }
     Neck.clear();
     if (this.showAll) {
       const pcs = iv.map((i) => mod(root + i, 12));
@@ -1612,6 +2027,7 @@ const Scales = {
         </div>
         <div class="wrap" style="gap:22px">
           <label class="switch"><input type="checkbox" id="sc-drone" ${this.drone ? 'checked' : ''}>Root drone (hear the home note)</label>
+          <label class="switch"><input type="checkbox" id="sc-train" ${this.train ? 'checked' : ''}>Loop and speed up (+4 bpm each time)</label>
         </div>
         <div class="row"><span class="lbl">Dots show</span>${seg('sc-lab', [['role', 'Role in the scale'], ['name', 'Note names']], this.labels)}</div>
       </div>
@@ -1623,6 +2039,7 @@ const Scales = {
     $('#sc-types', p).addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; this.scale = b.dataset.t; $$('#sc-types .chip', p).forEach((x) => x.setAttribute('aria-pressed', x === b)); this.pos = 1; this.update(); });
     $('#sc-play', p).addEventListener('click', () => (this.playing ? this.stop() : this.play()));
     $('#sc-bpm', p).addEventListener('input', (e) => { this.bpm = +e.target.value; $('#sc-bpm-o', p).textContent = this.bpm + ' bpm'; });
+    $('#sc-train', p).addEventListener('change', (e) => { this.train = e.target.checked; });
     $('#sc-drone', p).addEventListener('change', (e) => { this.drone = e.target.checked; this.drone ? Sound.droneOn(48 + this.root) : Sound.droneOff(); });
     wireSeg(p, 'sc-lab', (v) => { this.labels = v; this.draw(); });
     this.update();
@@ -1691,7 +2108,11 @@ const Scales = {
     const step = 60 / this.bpm / 2; // eighth notes
     seq.forEach((c, i) => Neck.play(c.s, c.f, i * step, 0.5));
     const btn = $('#sc-play', this.p); btn.innerHTML = `${ICONS.stop}Stop`;
-    this.playing = setTimeout(() => { this.playing = null; this.stop(); }, seq.length * step * 1000 + 300);
+    this.playing = setTimeout(() => {
+      this.playing = null;
+      if (this.train && current === this) { this.bpm = Math.min(240, this.bpm + 4); const sl = $('#sc-bpm', this.p); if (sl) { sl.value = this.bpm; $('#sc-bpm-o', this.p).textContent = this.bpm + ' bpm'; } this.play(); return; }
+      this.stop();
+    }, seq.length * step * 1000 + 300);
   },
   stop() {
     if (this.playing) { Sound.stopAll(); Neck.cancelPending(); }
@@ -1920,6 +2341,7 @@ const Progress = {
     const todayCount = S.daily.date === t ? S.daily.count : 0;
     p.innerHTML = `<div class="stats-grid">
         <div class="stat"><b style="color:var(--amber)">${currentStreak()}</b><span>Day streak</span></div>
+        <div class="stat"><b>${Object.keys(S.learn.done).length}<span class="muted" style="font-size:18px">/${allLessons().length}</span></b><span>Lessons finished</span></div>
         <div class="stat"><b>${todayCount}<span class="muted" style="font-size:18px">/${S.settings.goal}</span></b><span>Notes practiced today</span></div>
         <div class="stat"><b>${n ? Math.round(100 * ok / n) + '%' : '–'}</b><span>First-try accuracy</span></div>
         <div class="stat"><b>${ok ? (ms / ok / 1000).toFixed(1) + 's' : '–'}</b><span>Average time to answer</span></div>
@@ -1954,49 +2376,1595 @@ const Progress = {
   },
 };
 
-/* ================= Settings ================= */
-function openSettings() {
+
+/* ================= Learning path: lesson engine ================= */
+// S.learn = { done: { lessonId: stars }, last: lessonId, open: {levelIndex: bool} }
+if (!S.learn) S.learn = saved.learn || { done: {}, last: null, open: {} };
+
+const LEVEL_NAMES = ['First steps', 'Beginner', 'Improver', 'Intermediate', 'Fluent'];
+function allLessons() { const out = []; CURRICULUM.forEach((lv, li) => lv.lessons.forEach((ls, i) => out.push({ lv, li, ls, i }))); return out; }
+function lessonById(id) { return allLessons().find((x) => x.ls.id === id); }
+function levelProgress(lv) { const d = lv.lessons.filter((l) => S.learn.done[l.id]).length; return { done: d, total: lv.lessons.length, pct: d / lv.lessons.length }; }
+function nextLesson() { return allLessons().find((x) => !S.learn.done[x.ls.id]) || null; }
+function currentLevelIndex() { const n = nextLesson(); return n ? n.li : CURRICULUM.length - 1; }
+function pathPct() { const all = allLessons(); return all.filter((x) => S.learn.done[x.ls.id]).length / all.length; }
+
+/* Helpers the lesson scripts use to draw and play on the neck */
+const L = {
+  timers: [],
+  later(ms, fn) { const t = setTimeout(fn, ms); this.timers.push(t); return t; },
+  reset() { this.timers.forEach(clearTimeout); this.timers = []; Sound.stopAll(); Neck.cancelPending(); Neck.clear(); Sound.droneOff(); },
+  cell(s, f) { return { s, f, midi: midiAt(s, f), pc: midiAt(s, f) % 12 }; },
+  note(s, f, o = {}) { return Neck.noteMark(s, f, o); },
+  label(s, f, label, color, o = {}) { return Neck.mark(s, f, Object.assign({ label, color }, o)); },
+  iv(s, f, root, ctx = [], o = {}) { const semi = mod(midiAt(s, f) - root, 12); return Neck.mark(s, f, Object.assign({ label: intervalInfo(semi, ctx)[0], color: intervalColor(semi, ctx), ring: semi === 0, ringColor: '#fff' }, o)); },
+  notes(cells, o = {}) { cells.forEach((c, i) => this.note(c.s, c.f, Object.assign({ delay: (o.stagger || 0) * i }, o))); },
+  seq(cells, gap = 0.42, o = {}) {
+    cells.forEach((c, i) => {
+      this.later(i * gap * 1000 + (o.at || 0) * 1000, () => {
+        if (o.iv != null) this.iv(c.s, c.f, o.iv, o.ctx || [], { ring: o.ring }); else if (o.label) this.label(c.s, c.f, typeof o.label === 'function' ? o.label(c, i) : o.label, o.color || noteColor(midiAt(c.s, c.f) % 12)); else this.note(c.s, c.f, { ring: o.ring });
+        Neck.play(c.s, c.f, 0, 0.5);
+      });
+    });
+    return cells.length * gap;
+  },
+  all(pc, o = {}, maxF = S.settings.frets) { allCells((m) => m % 12 === pc, maxF).forEach((c) => this.note(c.s, c.f, o)); },
+  onString(s, a, b, pred = () => true) { const out = []; for (let f = a; f <= b; f++) { const c = this.cell(s, f); if (pred(c)) out.push(c); } return out; },
+  naturals(s, a = 0, b = 12) { return this.onString(s, a, b, (c) => IS_NATURAL[c.pc]); },
+  voicing(frets, root, iv, at = 0, o = {}) {
+    drawVoicing({ frets }, root, iv, { stagger: true });
+    if (!o.silent) strum(frets, { at });
+  },
+  chord(root, id, at = 0.2, o = {}) {
+    const t = chordType(id);
+    const v = o.frets ? { frets: o.frets } : (findVoicings(root, t.iv, 12).find((x) => x.base <= (o.maxBase ?? 7)) || findVoicings(root, t.iv, 12)[0]);
+    if (!v) return null;
+    if (o.clear !== false) Neck.clear();
+    this.voicing(v.frets, root, t.iv, at, o);
+    return v;
+  },
+  progression(chords, gap = 1.3, at = 0.2) {
+    chords.forEach(([root, id], i) => this.later((at + i * gap) * 1000, () => this.chord(root, id, 0, { maxBase: 5 })));
+  },
+  link(a, b, label, color) { Neck.link(a, b, label, color); },
+  band(s, color = '#ffc857') { const y = Neck.y(s); Neck.rect(Neck.g.nutX - 92, Neck.g.endX - Neck.g.nutX + 100, { y: y - 16, height: 32, rx: 16, fill: color, opacity: 0.16 }, Neck.fxBelow); },
+  shade(range) { Neck.shade(range, strings().map(() => true)); },
+  play(midis, gap = 0.4, at = 0) { midis.forEach((m, i) => Sound.play(m, at + i * gap, 0.5)); return midis.length * gap; },
+  together(midis, at = 0) { midis.forEach((m, i) => Sound.play(m, at + i * 0.012, 0.42)); },
+  scale(root, ivs, [a, b] = [0, 12], o = {}) {
+    const pcs = ivs.map((i) => mod(root + i, 12));
+    allCells((m, s, f) => f >= a && f <= b && pcs.includes(m % 12)).forEach(({ s, f }) => {
+      if (o.names) this.note(s, f, { cls: o.cls || '' }); else this.iv(s, f, root, ivs, { cls: o.cls || '' });
+    });
+  },
+  shape(cells, root, ivs, o = {}) { cells.forEach((c, i) => this.iv(c.s, c.f, root, ivs, { delay: (o.stagger ?? 25) * i, cls: o.cls || '' })); },
+  scroll(f) { Neck.scrollTo(f); },
+};
+
+/* Pentatonic / scale shapes reused by lessons (standard tuning) */
+function boxCells(root, ivs, a, b) {
+  const pcs = ivs.map((i) => mod(root + i, 12));
+  return allCells((m, s, f) => f >= a && f <= b && pcs.includes(m % 12)).sort((x, y) => x.midi - y.midi);
+}
+function pentShape(root, n) {
+  // n = 1..5, built with the same per-string rule as the Scales page
+  const save = Scales.root, saveS = Scales.scale;
+  Scales.root = root; Scales.scale = 'minpent';
+  const shapes = Scales.positions();
+  Scales.root = save; Scales.scale = saveS;
+  // shape 1 = the one whose low-E root is the minor root
+  const idx = shapes.findIndex((sh) => mod(strings()[0] + sh.anchor, 12) === root);
+  const sh = shapes[(idx + n - 1) % shapes.length];
+  let cells = sh.cells;
+  if (cells.length && Math.min(...cells.map((c) => c.f)) === 0 && n > 1 && cells.every((c) => c.f + 12 <= S.settings.frets)) cells = cells.map((c) => ({ s: c.s, f: c.f + 12, midi: c.midi + 12 }));
+  return cells.map((c) => ({ s: c.s, f: c.f, midi: midiAt(c.s, c.f), pc: midiAt(c.s, c.f) % 12 }));
+}
+
+/* ---------- Lesson player ---------- */
+const Player = {
+  active: false,
+  open(steps, opts) {
+    this.steps = steps; this.opts = opts; this.i = 0; this.mistakes = 0; this.passed = new Set();
+    this.active = true; this.saveInst = null;
+    const st = S.settings;
+    if (st.instrument !== 'guitar' || st.tuning !== 'standard' || st.frets < 15) {
+      this.saveInst = { instrument: st.instrument, tuning: st.tuning, frets: st.frets };
+      st.instrument = 'guitar'; st.tuning = 'standard'; st.frets = Math.max(15, st.frets); Sound.cache.clear();
+      Neck.build();
+    }
+    setStage(true);
+    Neck.onCell = (s, f) => this.onCell(s, f);
+    this.render();
+  },
+  close(done) {
+    L.reset(); this.active = false; if (Mic.active) Mic.stop();
+    if (this.saveInst) { Object.assign(S.settings, this.saveInst); this.saveInst = null; Sound.cache.clear(); Neck.build(); }
+    if (speechSynthesis && speechSynthesis.cancel) try { speechSynthesis.cancel(); } catch (e) { /* none */ }
+    $('#hud').innerHTML = '';
+    if (!done) Path.show();
+  },
+  step() { return this.steps[this.i]; },
+  hasCheck(st = this.step()) { return !!st.check; },
+  render() {
+    const st = this.step(), n = this.steps.length, p = $('#panel');
+    this.check = null;
+    $('#hud').innerHTML = `<div class="lesson-hud">
+      <button class="icon-btn" id="lp-close" aria-label="Leave lesson" title="Leave lesson">${ICONS.close}</button>
+      <div class="lesson-title"><small>${esc(this.opts.kicker || '')}</small><b>${esc(this.opts.title)}</b></div>
+      <div class="lp-dots" aria-label="Step ${this.i + 1} of ${n}">${this.steps.map((s, k) => `<i class="${k < this.i ? 'done' : k === this.i ? 'now' : ''}${s.check ? ' chk' : ''}"></i>`).join('')}</div>
+      <button class="icon-btn" id="lp-narr" aria-pressed="${S.settings.narrate !== false}" title="Read steps aloud" aria-label="Read steps aloud">${ICONS.voice}</button>
+    </div>`;
+    $('#lp-close').addEventListener('click', () => this.close());
+    $('#lp-narr').addEventListener('click', (e) => { S.settings.narrate = S.settings.narrate === false; persist(); e.currentTarget.setAttribute('aria-pressed', S.settings.narrate !== false); if (S.settings.narrate === false) try { speechSynthesis.cancel(); } catch (x) { /* */ } });
+    p.innerHTML = `<div class="lesson-card">
+      <p class="lesson-text">${st.t}</p>
+      ${st.html ? `<div class="lesson-extra">${typeof st.html === 'function' ? st.html() : st.html}</div>` : ''}
+      <div class="lesson-check" id="lp-check"></div>
+      <div class="lesson-nav">
+        <button class="btn" id="lp-back" ${this.i === 0 ? 'disabled' : ''}>Back</button>
+        <button class="btn" id="lp-replay">${ICONS.replay}Show me again</button>
+        <span class="lesson-spacer"></span>
+        ${st.check ? `<button class="btn btn-quiet" id="lp-skip">Skip this check</button>` : ''}
+        <button class="btn btn-primary" id="lp-next" ${st.check && !this.passed.has(this.i) ? 'disabled' : ''}>${this.i === n - 1 ? 'Finish' : 'Next'}</button>
+      </div></div>`;
+    $('#lp-back').addEventListener('click', () => this.go(this.i - 1));
+    $('#lp-next').addEventListener('click', () => this.next());
+    $('#lp-replay').addEventListener('click', () => this.show(true));
+    const sk = $('#lp-skip'); if (sk) sk.addEventListener('click', () => { this.mistakes += 2; this.passed.add(this.i); this.next(); });
+    $$('[data-goto]', p).forEach((b) => b.addEventListener('click', () => { this.close(true); setMode(b.dataset.goto); }));
+    this.show(false);
+    if (st.check) Checks.start(st.check, $('#lp-check'), () => { this.passed.add(this.i); const nb = $('#lp-next'); nb.disabled = false; nb.focus({ preventScroll: true }); });
+  },
+  show(again) {
+    const st = this.step(); L.reset();
+    if (st.show) st.show(L);
+    if (Checks.cur && Checks.cur.redraw) Checks.cur.redraw();
+    if (S.settings.narrate !== false) { const txt = st.t.replace(/<[^>]+>/g, '').replace(/♯/g, ' sharp').replace(/♭/g, ' flat').replace(/°/g, ' diminished'); Voice.sayLong(txt); }
+  },
+  go(i) { if (i < 0 || i >= this.steps.length) return; Checks.stop(); this.i = i; this.render(); },
+  next() { if (this.i < this.steps.length - 1) this.go(this.i + 1); else this.finish(); },
+  onCell(s, f) { if (Checks.cur && Checks.cur.onCell) Checks.cur.onCell(s, f); else Neck.play(s, f); },
+  onKey(e) {
+    if (e.code === 'ArrowRight' && !$('#lp-next').disabled) { e.preventDefault(); this.next(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); this.go(this.i - 1); }
+    else if (Checks.cur && Checks.cur.onKey) Checks.cur.onKey(e);
+  },
+  finish() {
+    Checks.stop();
+    const stars = this.mistakes === 0 ? 3 : this.mistakes <= 2 ? 2 : 1;
+    const r = this.opts.onDone ? this.opts.onDone(stars, this.mistakes) : null;
+    L.reset(); if (Mic.active) Mic.stop();
+    $('#hud').innerHTML = '';
+    const nx = nextLesson();
+    $('#panel').innerHTML = `<div class="lesson-card done-card">
+      <div class="stars big" aria-label="${stars} of 3 stars">${[1, 2, 3].map((k) => `<span class="${k <= stars ? 'on' : ''}">${ICONS.star}</span>`).join('')}</div>
+      <h2>${esc((r && r.headline) || 'Lesson complete')}</h2>
+      <p class="muted">${esc((r && r.sub) || (stars === 3 ? 'No mistakes. Clean work.' : stars === 2 ? 'Nearly perfect. Replay it any time for three stars.' : 'Done. Run it again later and it will feel easier.'))}</p>
+      <div class="wrap">${nx ? `<button class="btn btn-primary btn-big" id="dn-next">${ICONS.play}Next: ${esc(nx.ls.title)}</button>` : ''}<button class="btn btn-big" id="dn-path">Back to the path</button></div>
+    </div>`;
+    const back = () => { this.close(true); Path.show(); };
+    $('#dn-path').addEventListener('click', back);
+    const nb = $('#dn-next'); if (nb) nb.addEventListener('click', () => { this.close(true); Path.startLesson(nx.ls.id); });
+    if (stars === 3) celebrate();
+  },
+};
+
+/* ---------- Checks (interactive questions inside lessons) ---------- */
+const Checks = {
+  cur: null,
+  stop() { if (this.cur && this.cur.stop) this.cur.stop(); this.cur = null; if (Mic.active) Mic.stop(); },
+  start(spec, box, pass) {
+    this.stop();
+    const items = spec.items ? spec.items.slice() : spec.gen ? Array.from({ length: spec.n || 3 }, () => spec.gen()) : [spec];
+    const kind = spec.type;
+    const run = { idx: 0, items, kind, box, spec };
+    const fail = () => { Player.mistakes++; };
+    const advance = () => {
+      run.idx++;
+      if (run.idx >= items.length) { box.innerHTML = `<div class="check-ok">${ICONS.check}<span>${esc(spec.doneText || 'Nice. Check passed.')}</span></div>`; this.cur = null; Neck.onCell = (s, f) => Player.onCell(s, f); pass(); return; }
+      L.later(spec.type === 'quiz' ? 0 : 650, () => renderItem());
+    };
+    const counter = () => items.length > 1 ? `<span class="check-count">${run.idx + 1} of ${items.length}</span>` : '';
+    const renderItem = () => {
+      const it = items[run.idx];
+      const T = CheckTypes[kind];
+      this.cur = T(it, { box, counter, fail, done: advance, spec });
+    };
+    renderItem();
+  },
+};
+const CheckTypes = {
+  tap(it, k) {
+    const targets = allCells((m, s, f) => it.target(s, f, m));
+    const found = new Set(); let tries = 0;
+    const draw = () => { if (it.show) it.show(L); };
+    L.reset(); draw();
+    k.box.innerHTML = `<div class="check-q">${ICONS.find}<div><b>${it.prompt}</b>${k.counter()}<small>${it.all ? `Find all ${targets.length}.` : 'Tap it on the neck.'}</small></div></div>`;
+    return {
+      redraw: draw,
+      onCell(s, f) {
+        const m = midiAt(s, f);
+        Neck.play(s, f);
+        if (it.target(s, f, m)) {
+          found.add(s + ':' + f); Neck.noteMark(s, f, { ring: true, cls: 'pulse' });
+          if (!it.all || found.size >= targets.length) { this.onCell = null; k.done(); }
+        } else {
+          tries++; k.fail(); Neck.flashBad(s, f, noteName(m % 12));
+          if (tries >= 2) { targets.forEach((c) => Neck.noteMark(c.s, c.f, { ring: true, cls: 'pulse target' })); this.onCell = null; L.later(1500, () => k.done()); }
+        }
+      },
+    };
+  },
+  quiz(it, k) {
+    k.box.innerHTML = `<div class="check-q">${ICONS.name}<div><b>${it.q}</b>${k.counter()}</div></div>
+      <div class="answers quiz">${it.options.map((o, i) => `<button class="answer" data-i="${i}"><b>${o}</b></button>`).join('')}</div><p class="check-why" hidden></p>`;
+    let missed = false;
+    $$('.answer', k.box).forEach((b) => b.addEventListener('click', () => {
+      const i = +b.dataset.i;
+      if (i === it.answer) {
+        b.classList.add('right'); $$('.answer', k.box).forEach((x) => (x.disabled = true));
+        if (it.why) { const w = $('.check-why', k.box); w.hidden = false; w.textContent = it.why; }
+        if (it.after) { L.reset(); it.after(L); }
+        L.later(it.why ? 1600 : 700, () => k.done());
+      } else { b.classList.add('wrong'); b.disabled = true; if (!missed) k.fail(); missed = true; }
+    }));
+    return {};
+  },
+  ear(it, k) {
+    k.box.innerHTML = `<div class="check-q">${ICONS.ear}<div><b>${it.q}</b>${k.counter()}<small>Press play, then answer.</small></div></div>
+      <div class="wrap"><button class="btn btn-primary" id="ck-play">${ICONS.play}Play</button></div>
+      <div class="answers quiz">${it.options.map((o, i) => `<button class="answer" data-i="${i}"><b>${o}</b></button>`).join('')}</div><p class="check-why" hidden></p>`;
+    const play = () => { Sound.stopAll(); Neck.cancelPending(); it.play(L); };
+    $('#ck-play', k.box).addEventListener('click', play);
+    L.later(300, play);
+    let missed = false;
+    $$('.answer', k.box).forEach((b) => b.addEventListener('click', () => {
+      const i = +b.dataset.i;
+      if (i === it.answer) {
+        b.classList.add('right'); $$('.answer', k.box).forEach((x) => (x.disabled = true));
+        if (it.why) { const w = $('.check-why', k.box); w.hidden = false; w.textContent = it.why; }
+        if (it.after) { L.reset(); it.after(L); }
+        L.later(1500, () => k.done());
+      } else { b.classList.add('wrong'); b.disabled = true; if (!missed) k.fail(); missed = true; play(); }
+    }));
+    return { onKey(e) { if (e.code === 'Space') { e.preventDefault(); play(); } } };
+  },
+  drill(it, k) {
+    // it: { s, pc, a, b } generated by drillGen
+    const pc = it.pc;
+    L.reset(); L.band(it.s); L.shade([it.a, it.b]);
+    Neck.scrollTo(Math.round((it.a + it.b) / 2));
+    k.box.innerHTML = `<div class="check-q">${ICONS.find}<div><b>Find <span class="inline-note" style="background:${noteColor(pc)}">${noteName(pc)}</span> on the ${ordinal(stringNumber(it.s))} string</b>${k.counter()}<small>Frets ${it.a} to ${it.b}.</small></div></div>`;
+    Sound.play(strings()[it.s] + it.f, 0.05);
+    let tries = 0;
+    return {
+      redraw() { L.band(it.s); L.shade([it.a, it.b]); },
+      onCell(s, f) {
+        const m = midiAt(s, f); Neck.play(s, f);
+        if (s === it.s && m % 12 === pc && f >= it.a && f <= it.b) { recordAnswer(s, f, tries === 0, 3000); Neck.noteMark(s, f, { ring: true, cls: 'pulse' }); this.onCell = null; k.done(); }
+        else {
+          tries++; k.fail(); Neck.flashBad(s, f, noteName(m % 12));
+          if (tries >= 2) { recordAnswer(it.s, it.f, false, 0); Neck.noteMark(it.s, it.f, { ring: true, cls: 'pulse target' }); this.onCell = null; L.later(1400, () => k.done()); }
+        }
+      },
+    };
+  },
+  seq(it, k) {
+    let pos = 0, tries = 0, micOn = false;
+    const cells = typeof it.cells === 'function' ? it.cells() : it.cells;
+    const draw = () => { if (it.show) it.show(L); else cells.forEach((c, i) => Neck.mark(c.s, c.f, { label: i + 1, color: 'rgba(241,233,218,.25)', textColor: '#f1e9da', fontSize: 12, cls: 'seqhint' })); };
+    L.reset(); draw();
+    const dots = () => `<div class="seq-dots">${cells.map((c, i) => `<i class="${i < pos ? 'done' : i === pos ? 'now' : ''}" style="${i < pos ? `background:${noteColor(midiAt(c.s, c.f) % 12)}` : ''}"></i>`).join('')}</div>`;
+    const paint = () => {
+      k.box.innerHTML = `<div class="check-q">${ICONS.play}<div><b>${it.prompt}</b>${k.counter()}<small>${micOn ? 'Listening: play each note on your guitar.' : 'Tap each note in order, or play them on your guitar.'}</small></div></div>${dots()}
+      <div class="wrap"><button class="btn" id="sq-hear">${ICONS.replay}Hear it</button><button class="btn" id="sq-mic">${ICONS.mic}${micOn ? 'Stop listening' : 'Use my guitar'}</button></div>`;
+      $('#sq-hear', k.box).addEventListener('click', () => { Sound.stopAll(); cells.forEach((c, i) => Neck.play(c.s, c.f, i * 0.32, 0.45)); });
+      $('#sq-mic', k.box).addEventListener('click', async () => {
+        if (micOn) { Mic.stop(); micOn = false; paint(); return; }
+        try { await Mic.start(onPitch); micOn = true; paint(); } catch (e) { micError(e); }
+      });
+    };
+    const hit = () => {
+      const c = cells[pos]; Neck.noteMark(c.s, c.f, { ring: true }); pos++;
+      if (pos >= cells.length) { if (Mic.active) Mic.stop(); api.onCell = null; k.done(); } else paint();
+    };
+    let last = -1, stable = 0;
+    const onPitch = (fr) => {
+      if (fr <= 0 || pos >= cells.length) { stable = 0; return; }
+      const m = Math.round(69 + 12 * Math.log2(fr / 440));
+      if (m === last) stable++; else { stable = 1; last = m; }
+      if (stable === 3) { const want = midiAt(cells[pos].s, cells[pos].f); if (m === want || m % 12 === want % 12) { last = -99; Neck.pluck(cells[pos].s, cells[pos].f); hit(); } }
+    };
+    paint();
+    const api = {
+      redraw: draw,
+      stop() { if (Mic.active) Mic.stop(); },
+      onCell(s, f) {
+        const c = cells[pos]; const m = midiAt(s, f); Neck.play(s, f);
+        const ok = (s === c.s && f === c.f) || (!it.exact && m === midiAt(c.s, c.f));
+        if (ok) hit(); else { tries++; if (tries <= 3) k.fail(); Neck.flashBad(s, f, noteName(m % 12)); }
+      },
+    };
+    return api;
+  },
+  chord(it, k) {
+    const t = chordType(it.id); const pcs = [...new Set(t.iv.map((i) => mod(it.root + i, 12)))];
+    const v = it.frets ? { frets: it.frets } : findVoicings(it.root, t.iv, 12)[0];
+    const draw = () => { Neck.clear(); drawVoicing(v, it.root, t.iv); };
+    L.reset(); draw();
+    const name = noteName(it.root) + t.sym;
+    let good = 0, micOn = false;
+    const paint = (res) => {
+      k.box.innerHTML = `<div class="check-q">${ICONS.chords}<div><b>Play ${esc(name)} on your guitar</b>${k.counter()}<small>${micOn ? 'Strum it and let it ring.' : 'Turn on listening and strum, or check it by ear.'}</small></div></div>
+        <div class="chroma" id="ck-chroma">${Array.from({ length: 12 }, (_, pc) => `<div class="cb${pcs.includes(pc) ? ' want' : ''}"><i style="--c:${noteColor(pc)}"></i><span>${noteName(pc)}</span></div>`).join('')}</div>
+        <p class="check-why" id="ck-msg">${res || ''}</p>
+        <div class="wrap"><button class="btn btn-primary" id="ck-mic">${ICONS.mic}${micOn ? 'Stop listening' : 'Listen to my guitar'}</button><button class="btn" id="ck-hear">${ICONS.strum}Hear it</button><button class="btn" id="ck-self">I played it cleanly</button></div>`;
+      $('#ck-hear', k.box).addEventListener('click', () => strum(v.frets));
+      $('#ck-self', k.box).addEventListener('click', () => finish());
+      $('#ck-mic', k.box).addEventListener('click', async () => {
+        if (micOn) { Mic.stop(); micOn = false; paint(); return; }
+        try { await Mic.start(() => {}); Mic.chromaCb = onChroma; micOn = true; paint('Listening…'); } catch (e) { micError(e); }
+      });
+    };
+    let lastMsg = 0;
+    const onChroma = (c) => {
+      const bars = $$('#ck-chroma .cb i', k.box);
+      bars.forEach((b, pc) => (b.style.height = c ? Math.round(6 + c[pc] * 94) + '%' : '6%'));
+      if (!c) { good = Math.max(0, good - 1); return; }
+      const r = checkChord(c, pcs);
+      if (r.ok) { good++; if (good >= 4) finish(true); }
+      else {
+        good = 0;
+        if (performance.now() - lastMsg > 1200 && r.missing.length) {
+          lastMsg = performance.now();
+          const strs = v.frets.map((f, s) => ({ f, s })).filter((x) => x.f >= 0 && r.missing.includes(midiAt(x.s, x.f) % 12)).map((x) => ordinal(stringNumber(x.s)));
+          const msg = $('#ck-msg', k.box); if (msg) msg.textContent = `Not hearing ${r.missing.map(noteName).join(', ')} yet${strs.length ? `. Check the ${strs.join(' and ')} string${strs.length > 1 ? 's' : ''}: press closer to the fret and let it ring.` : '.'}`;
+          v.frets.forEach((f, s) => { if (f >= 0 && r.missing.includes(midiAt(s, f) % 12)) Neck.pluck(s, f, '#ff6b7a'); });
+        }
+      }
+    };
+    const finish = (heard) => { if (Mic.active) Mic.stop(); micOn = false; if (heard) toast(`Heard a clean ${name}`, 1400); api.onCell = null; k.done(); };
+    paint();
+    const api = { redraw: draw, stop() { if (Mic.active) Mic.stop(); }, onCell(s, f) { Neck.play(s, f); } };
+    return api;
+  },
+};
+// generators used by the curriculum
+function drillGen(stringsList, a, b, naturals = true) {
+  return () => {
+    const s = rand(stringsList);
+    let f; do { f = a + Math.floor(Math.random() * (b - a + 1)); } while (naturals && !IS_NATURAL[midiAt(s, f) % 12]);
+    return { s, f, pc: midiAt(s, f) % 12, a, b };
+  };
+}
+function celebrate() {
+  if (reduceMotion()) return;
+  const cells = allCells((m, s, f) => f > 0 && f <= 12).sort(() => Math.random() - 0.5).slice(0, 18);
+  cells.forEach((c, i) => setTimeout(() => { Neck.pluck(c.s, c.f, noteGlow(c.pc)); }, i * 45));
+  [0, 4, 7, 12].forEach((iv, i) => Sound.play(60 + iv, 0.05 + i * 0.09, 0.35));
+}
+
+/* ================= Path (Learn home) ================= */
+const Path = {
+  id: 'path', nav: 'Path', title: 'Your learning path',
+  help: 'Five levels, from your first string names to seeing the whole neck. Follow the glowing lesson, or jump to anything that interests you.',
+  noNeck: true,
+  mount(p) { this.p = p; if (Player.active) Player.close(true); this.show(); },
+  unmount() { if (Player.active) Player.close(true); },
+  show() {
+    if (current !== this) { setMode('path'); return; }
+    setStage(false); Neck.onCell = (s, f) => Neck.play(s, f);
+    $('#mode-title').textContent = this.title; $('#mode-help').textContent = this.help;
+    const p = this.p; const nx = nextLesson(); const cur = currentLevelIndex();
+    const all = allLessons(); const doneN = all.filter((x) => S.learn.done[x.ls.id]).length;
+    const pct = Math.round(100 * doneN / all.length);
+    const C = 2 * Math.PI * 34;
+    p.innerHTML = `
+      <div class="roadmap">
+        <div class="rm-ring"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/><circle cx="40" cy="40" r="34" fill="none" stroke="#ffc857" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - doneN / all.length)}" transform="rotate(-90 40 40)"/></svg><div><b>${pct}%</b><small>${doneN}/${all.length}</small></div></div>
+        <div class="rm-track">
+          ${CURRICULUM.map((lv, li) => { const pr = levelProgress(lv); return `<button class="rm-seg${li === cur ? ' here' : ''}${pr.done === pr.total ? ' full' : ''}" data-lv="${li}" title="${esc(lv.title)}: ${pr.done} of ${pr.total}">
+            <span class="rm-bar"><i style="width:${pr.pct * 100}%"></i></span>
+            <span class="rm-name"><b>${li + 1}</b> ${esc(lv.title)}</span>
+            <span class="rm-rank">${LEVEL_NAMES[li]}</span>
+            ${li === cur ? '<span class="rm-pin">You are here</span>' : ''}</button>`; }).join('')}
+        </div>
+      </div>
+      ${nx ? `<div class="next-card" style="--c:${KIND_COLORS[nx.ls.kind]}">
+        <div class="nc-icon">${ICONS[KIND_ICONS[nx.ls.kind]]}</div>
+        <div class="nc-txt"><small>Up next: level ${nx.li + 1}, lesson ${nx.i + 1}</small><h2>${esc(nx.ls.title)}</h2><p>${esc(nx.ls.blurb)}</p></div>
+        <button class="btn btn-primary btn-big" id="pt-go">${ICONS.play}Start lesson</button></div>`
+        : `<div class="next-card" style="--c:#5ee6a8"><div class="nc-icon">${ICONS.star}</div><div class="nc-txt"><small>Path complete</small><h2>You finished every lesson</h2><p>Keep your streak alive in Practice, or jam over a backing track in Play.</p></div><button class="btn btn-primary btn-big" data-goto="jam">${ICONS.play}Open Jam</button></div>`}
+      <div class="levels">${CURRICULUM.map((lv, li) => this.levelHTML(lv, li, cur)).join('')}</div>`;
+    const go = $('#pt-go', p); if (go) go.addEventListener('click', () => this.startLesson(nx.ls.id));
+    $$('[data-goto]', p).forEach((b) => b.addEventListener('click', () => setMode(b.dataset.goto)));
+    $$('.rm-seg', p).forEach((b) => b.addEventListener('click', () => { const li = +b.dataset.lv; S.learn.open[li] = true; persist(); this.show(); const el = $(`#lv-${li}`); if (el) el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); }));
+    $$('.lv-toggle', p).forEach((b) => b.addEventListener('click', () => { const li = +b.dataset.lv; S.learn.open[li] = !this.isOpen(li, cur); persist(); this.show(); }));
+    $$('.node', p).forEach((b) => b.addEventListener('click', () => this.startLesson(b.dataset.id)));
+    $$('.lv-guide', p).forEach((b) => b.addEventListener('click', () => { Theory.focus = +b.dataset.lv; setMode('theory'); }));
+    $$('.lv-test', p).forEach((b) => b.addEventListener('click', () => this.testOut(+b.dataset.lv)));
+  },
+  isOpen(li, cur) { return S.learn.open[li] != null ? S.learn.open[li] : li === cur; },
+  levelHTML(lv, li, cur) {
+    const pr = levelProgress(lv); const open = this.isOpen(li, cur); const nx = nextLesson();
+    return `<section class="level${open ? ' open' : ''}${li === cur ? ' current' : ''}" id="lv-${li}">
+      <header class="lv-head">
+        <div class="lv-num">${pr.done === pr.total ? ICONS.check : li + 1}</div>
+        <div class="lv-txt"><small>Level ${li + 1}, ${LEVEL_NAMES[li]}</small><h3>${esc(lv.title)}</h3><p>${esc(lv.blurb)}</p></div>
+        <div class="lv-meta"><span class="lv-count">${pr.done} of ${pr.total}</span>
+          <div class="lv-actions"><button class="chip lv-guide" data-lv="${li}">${ICONS.book}Guidebook</button>
+          ${pr.done < pr.total ? `<button class="chip lv-test" data-lv="${li}">Already know this? Test out</button>` : ''}
+          <button class="chip lv-toggle" data-lv="${li}" aria-expanded="${open}">${open ? 'Hide lessons' : 'Show lessons'}</button></div></div>
+      </header>
+      ${open ? `<div class="nodes">${lv.lessons.map((ls, i) => {
+        const st = S.learn.done[ls.id] || 0; const isNext = nx && nx.ls.id === ls.id;
+        const off = [0, 1, 2, 1, 0, -1, -2, -1][i % 8];
+        return `<div class="node-row" style="--off:${off}"><button class="node${st ? ' done' : ''}${isNext ? ' next' : ''}" data-id="${ls.id}" style="--c:${KIND_COLORS[ls.kind]}" aria-label="${esc(ls.title)}${st ? `, ${st} stars` : ''}">${ICONS[KIND_ICONS[ls.kind]]}${isNext ? '<span class="node-go">Start</span>' : ''}</button>
+          <div class="node-label"><b>${esc(ls.title)}</b><span>${KIND_NAMES[ls.kind]}, ${ls.mins} min</span>${st ? `<span class="stars">${[1, 2, 3].map((k) => `<i class="${k <= st ? 'on' : ''}">${ICONS.star}</i>`).join('')}</span>` : ''}</div></div>`;
+      }).join('')}</div>` : ''}
+    </section>`;
+  },
+  startLesson(id) {
+    const x = lessonById(id); if (!x) return;
+    if (current !== this) setMode('path');
+    S.learn.last = id; persist();
+    $('#mode-title').textContent = x.ls.title; $('#mode-help').textContent = x.ls.blurb;
+    Player.open(x.ls.steps, {
+      title: x.ls.title, kicker: `Level ${x.li + 1}, lesson ${x.i + 1}`,
+      onDone: (stars) => { S.learn.done[id] = Math.max(S.learn.done[id] || 0, stars); persist(); renderDaily(); const lp = levelProgress(x.lv); if (lp.done === lp.total) return { headline: `Level ${x.li + 1} complete!`, sub: `You finished “${x.lv.title}”. On to ${CURRICULUM[x.li + 1] ? '“' + CURRICULUM[x.li + 1].title + '”' : 'the Jam room'}.` }; return null; },
+    });
+  },
+  testOut(li) {
+    const lv = CURRICULUM[li];
+    const steps = lv.lessons.map((ls) => ls.steps.find((s) => s.check)).filter(Boolean).map((s) => ({ t: s.t, show: s.show, html: s.html, check: s.check.gen ? Object.assign({}, s.check, { n: 1 }) : s.check.items ? Object.assign({}, s.check, { items: s.check.items.slice(0, 1) }) : s.check }));
+    steps.unshift({ t: `Test out of level ${li + 1}: one quick question from each lesson. Make two mistakes or fewer and the whole level is marked complete.` });
+    if (current !== this) setMode('path');
+    $('#mode-title').textContent = `Test out: ${lv.title}`;
+    Player.open(steps, {
+      title: `Test out: ${lv.title}`, kicker: `Level ${li + 1}`,
+      onDone: (stars, mistakes) => {
+        if (mistakes <= 2) { lv.lessons.forEach((ls) => { S.learn.done[ls.id] = Math.max(S.learn.done[ls.id] || 0, 2); }); persist(); return { headline: `Level ${li + 1} unlocked`, sub: 'Every lesson in this level is marked done. Replay any of them for three stars.' }; }
+        return { headline: 'Not quite yet', sub: `${mistakes} mistakes. Work through the lessons first, they're short.` };
+      },
+    });
+  },
+  onKey(e) { if (Player.active) Player.onKey(e); },
+};
+const KIND_ICONS = { neck: 'explore', theory: 'book', ear: 'ear', chord: 'chords', play: 'jam' };
+const KIND_NAMES = { neck: 'On the neck', theory: 'Theory', ear: 'Ear', chord: 'Chords', play: 'Play along' };
+const KIND_COLORS = { neck: '#5aa9ff', theory: '#c69cff', ear: '#6fe0d6', chord: '#ffd166', play: '#ff7b54' };
+
+/* ================= Theory notes (guidebooks) ================= */
+const Theory = {
+  id: 'theory', nav: 'Theory notes', title: 'Theory notes',
+  help: 'The cheat sheet for every level: the facts worth remembering, in one place. Tap a lesson title to see it animated on the neck.',
+  noNeck: true, focus: null,
+  mount(p) {
+    setStage(false);
+    const cur = currentLevelIndex();
+    p.innerHTML = `<div class="guides">${CURRICULUM.map((lv, li) => `<details class="guide" id="gd-${li}" ${(this.focus ?? cur) === li ? 'open' : ''}>
+      <summary><span class="lv-num small">${li + 1}</span><span><b>${esc(lv.title)}</b><small>${esc(lv.blurb)}</small></span></summary>
+      <div class="guide-body">${lv.guide.map(([h, body]) => `<div class="g-item"><h4>${h}</h4><div>${body}</div></div>`).join('')}
+      <div class="g-lessons"><span class="muted">Lessons:</span>${lv.lessons.map((ls) => `<button class="chip" data-id="${ls.id}">${S.learn.done[ls.id] ? ICONS.check : ''}${esc(ls.title)}</button>`).join('')}</div></div></details>`).join('')}</div>`;
+    $$('.g-lessons .chip', p).forEach((b) => b.addEventListener('click', () => { setMode('path'); Path.startLesson(b.dataset.id); }));
+    if (this.focus != null) { const el = $(`#gd-${this.focus}`); if (el) setTimeout(() => el.scrollIntoView({ block: 'start' }), 50); this.focus = null; }
+  },
+};
+
+/* ================= Curriculum: guitar + music theory in 5 levels =================
+   Lessons are written for standard-tuned guitar; the player switches to it while a lesson runs.
+   String index: 0 = low E (6th string) ... 5 = high e (1st string). */
+const at = (s, f) => ({ s, f });
+const run = (s, frets) => frets.map((f) => at(s, f));
+const MAJ = [0, 2, 4, 5, 7, 9, 11], MINPENT = [0, 3, 5, 7, 10], BLUES = [0, 3, 5, 6, 7, 10];
+function voicingOf(root, id) { const t = chordType(id); return (findVoicings(root, t.iv, 12).find((v) => v.base <= 5) || findVoicings(root, t.iv, 12)[0]); }
+function hearChords(list, gap = 1.1) {
+  const ctx = Sound.ensure(); if (!ctx) return;
+  list.forEach(([r, id], i) => { const v = voicingOf(r, id); if (v) Sound.strumAt(v.frets, ctx.currentTime + 0.1 + i * gap, false, 0.32); });
+}
+function randRoot(lo = 0, hi = 11) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function shuffleOpts(opts, answer) { const o = opts.map((t, i) => ({ t, ok: i === answer })).sort(() => Math.random() - 0.5); return { options: o.map((x) => x.t), answer: o.findIndex((x) => x.ok) }; }
+function circleSVG() {
+  const keys = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'], acc = ['0', '1♯', '2♯', '3♯', '4♯', '5♯', '6♯', '5♭', '4♭', '3♭', '2♭', '1♭'];
+  const pcs = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
+  return `<svg class="circle5" viewBox="0 0 260 260" role="img" aria-label="Circle of fifths">${keys.map((k, i) => { const a = (i / 12) * Math.PI * 2 - Math.PI / 2, x = 130 + Math.cos(a) * 100, y = 130 + Math.sin(a) * 100; return `<g><circle cx="${x}" cy="${y}" r="21" fill="${noteColor(pcs[i])}"/><text x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="800" fill="#1d1a3b">${k}</text><text x="${130 + Math.cos(a) * 58}" y="${130 + Math.sin(a) * 58}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#b8b1cc">${acc[i]}</text></g>`; }).join('')}<text x="130" y="130" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#b8b1cc">clockwise = up a 5th</text></svg>`;
+}
+const tabBlock = (lines) => `<pre class="tab">${lines.map(esc).join('\n')}</pre>`;
+const chips = (arr) => `<div class="tone-row">${arr.map(([lab, txt, col]) => `<span class="tone"><i style="background:${col}">${lab}</i><b>${txt}</b></span>`).join('')}</div>`;
+
+const G3NPS = [[0, 3], [0, 5], [0, 7], [1, 3], [1, 5], [1, 7], [2, 4], [2, 5], [2, 7], [3, 4], [3, 5], [3, 7], [4, 5], [4, 7], [4, 8], [5, 5], [5, 7], [5, 8]].map(([s, f]) => ({ s, f, midi: [40, 45, 50, 55, 59, 64][s] + f, pc: ([40, 45, 50, 55, 59, 64][s] + f) % 12 }));
+
+const CURRICULUM = [
+  /* ------------------------------ LEVEL 1 ------------------------------ */
+  {
+    title: 'Meet the neck', blurb: 'String names, the musical alphabet, and your first fretboard landmarks.',
+    guide: [
+      ['Strings', 'From thickest to thinnest: <b>E A D G B E</b>. The thick E is the 6th string, the thin e is the 1st. Memory trick: <i>Eddie Ate Dynamite, Good Bye Eddie</i>.'],
+      ['The musical alphabet', 'Seven letters, <b>A B C D E F G</b>, then it repeats. Sharps (♯) and flats (♭) sit between letters: A♯ and B♭ are the same note.'],
+      ['The no-gap pairs', '<b>B–C</b> and <b>E–F</b> have nothing between them. Everywhere else, letters are two frets apart.'],
+      ['Half and whole steps', 'One fret = one <b>half step</b>. Two frets = one <b>whole step</b>. There are 12 different notes before they repeat.'],
+      ['Landmarks', 'Low E string: G at 3, A at 5, B at 7, E at 12. A string: C at 3, D at 5, E at 7, A at 12.'],
+      ['Octaves', 'From the 6th or 5th string: up two strings, up two frets. From the 4th or 3rd string: up two strings, up <b>three</b> frets (the B string is tuned differently).'],
+      ['The 12th fret', 'Everything starts over at fret 12, one octave higher. Learn frets 0 to 12 and you know the whole neck.'],
+    ],
+    lessons: [
+      {
+        id: 'strings', title: 'Six strings, six names', kind: 'neck', mins: 2, blurb: 'Learn the open strings by sight and sound.',
+        steps: [
+          { t: 'Your guitar has six strings. From the thickest to the thinnest they are <b>E, A, D, G, B and E</b>.', show: (L) => { L.seq([0, 1, 2, 3, 4, 5].map((s) => at(s, 0)), 0.55); } },
+          { t: 'A memory trick: <b>E</b>ddie <b>A</b>te <b>D</b>ynamite, <b>G</b>ood <b>B</b>ye <b>E</b>ddie. The thick E is called the 6th string; the thin e is the 1st.', show: (L) => { [0, 1, 2, 3, 4, 5].forEach((s) => L.note(s, 0, { delay: s * 60 })); L.band(0); L.band(5); } },
+          { t: 'Thick strings sound low, thin strings sound high. Listen to the low E, then the high e: same letter, two octaves apart.', show: (L) => { L.note(0, 0); L.note(5, 0); L.link(at(0, 0), at(5, 0), '2 octaves'); Neck.play(0, 0, 0.2); Neck.play(5, 0, 1.0); } },
+          { t: 'Your turn. Tap the strings I name.', check: { type: 'tap', items: [
+            { prompt: 'Tap the open <b>D</b> string.', target: (s, f) => s === 2 && f === 0 },
+            { prompt: 'Tap the open <b>B</b> string.', target: (s, f) => s === 4 && f === 0 },
+            { prompt: 'Tap the open <b>A</b> string.', target: (s, f) => s === 1 && f === 0 },
+          ] } },
+        ],
+      },
+      {
+        id: 'alphabet', title: 'The musical alphabet', kind: 'theory', mins: 3, blurb: 'Seven letters, twelve notes, and the two pairs with no gap.',
+        steps: [
+          { t: 'Music uses just seven letters: <b>A B C D E F G</b>. After G, it starts again at A.', show: (L) => L.seq(L.naturals(1, 0, 12), 0.45) },
+          { t: 'Between most letters there is an extra note. A♯ (“A sharp”) sits between A and B. It is the same note as B♭ (“B flat”): one note, two names.', show: (L) => { L.seq(run(1, [0, 1, 2]), 0.6); L.later(1900, () => L.link(at(1, 0), at(1, 2), 'A♯ sits between')); } },
+          { t: 'Two pairs have <b>no</b> note between them: <b>B–C</b> and <b>E–F</b>. Here they are on the A and D strings, sitting right next to each other.', show: (L) => { L.seq([at(1, 2), at(1, 3)], 0.5, { ring: true }); L.later(1200, () => L.seq([at(2, 2), at(2, 3)], 0.5, { ring: true })); } },
+          { t: 'Count every note, sharps included, and you get <b>12</b>. After 12 the pattern repeats one octave higher. That is why fret 12 looks like the open strings.', show: (L) => L.seq(run(1, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 0.28) },
+          { t: 'Quick check.', check: { type: 'quiz', items: [
+            { q: 'Which letter comes after G?', options: ['H', 'A', 'F'], answer: 1, why: 'The alphabet loops: …E, F, G, A, B…' },
+            { q: 'Which pair has no sharp between them?', options: ['A and B', 'E and F', 'C and D'], answer: 1, why: 'E–F and B–C are the two no-gap pairs.' },
+            { q: 'A♯ is the same note as…', options: ['B♭', 'A♭', 'B♯'], answer: 0, why: 'One fret above A, one fret below B: two names, same sound.' },
+          ] } },
+        ],
+      },
+      {
+        id: 'steps', title: 'Half steps and whole steps', kind: 'theory', mins: 2, blurb: 'The two step sizes everything in music is built from.',
+        steps: [
+          { t: 'Each fret is one <b>half step</b>, the smallest move in Western music. Fret by fret, the low E string climbs in half steps.', show: (L) => L.seq(run(0, [0, 1, 2, 3, 4]), 0.45) },
+          { t: 'Two frets make a <b>whole step</b>. C to D is a whole step. E to F is only a half step, because E–F is a no-gap pair.', show: (L) => { L.note(1, 3); L.note(1, 5); L.link(at(1, 3), at(1, 5), 'whole'); L.note(2, 2); L.note(2, 3); L.link(at(2, 2), at(2, 3), 'half'); Neck.play(1, 3, 0.2); Neck.play(1, 5, 0.7); Neck.play(2, 2, 1.4); Neck.play(2, 3, 1.9); } },
+          { t: 'So to walk up the letters on one string, skip a fret each time, except between B–C and E–F.', show: (L) => L.seq(L.naturals(1, 0, 12), 0.4) },
+          { t: 'Try it.', check: { type: 'tap', items: [
+            { prompt: 'C is at fret 3 on the A string. Tap <b>D</b>, a whole step higher on the same string.', target: (s, f) => s === 1 && f === 5, show: (L) => { L.note(1, 3, { ring: true }); L.band(1); } },
+            { prompt: 'E is at fret 2 on the D string. Tap <b>F</b>, a half step higher.', target: (s, f) => s === 2 && f === 3, show: (L) => { L.note(2, 2, { ring: true }); L.band(2); } },
+          ] } },
+        ],
+      },
+      {
+        id: 'lowE', title: 'Notes on the low E string', kind: 'neck', mins: 3, blurb: 'Learn the 6th string through landmarks, not counting.',
+        steps: [
+          { t: 'Start with landmarks on the 6th string: open <b>E</b>, <b>G</b> at fret 3, <b>A</b> at 5, <b>B</b> at 7, and <b>E</b> again at 12.', show: (L) => { L.band(0); L.seq(run(0, [0, 3, 5, 7, 12]), 0.6, { ring: true }); } },
+          { t: 'The dots on your guitar line up with these landmarks: frets 3, 5, 7 and the double dot at 12. Use them instead of counting.', show: (L) => { L.band(0); L.notes(run(0, [0, 3, 5, 7, 12]), { stagger: 80 }); } },
+          { t: 'Fill in the gaps by stepping. F is one fret after E. C sits between B and D. Every natural note on the string:', show: (L) => { L.band(0); L.seq(L.naturals(0, 0, 12), 0.38); } },
+          { t: 'Find each note on the 6th string. Landmarks first, then step.', check: { type: 'drill', gen: drillGen([0], 0, 12), n: 6, doneText: 'Low E string: done.' } },
+        ],
+      },
+      {
+        id: 'aString', title: 'Notes on the A string', kind: 'neck', mins: 3, blurb: 'Same idea on the 5th string, with a shortcut.',
+        steps: [
+          { t: 'A string landmarks: open <b>A</b>, <b>C</b> at 3, <b>D</b> at 5, <b>E</b> at 7, and <b>A</b> at 12.', show: (L) => { L.band(1); L.seq(run(1, [0, 3, 5, 7, 12]), 0.6, { ring: true }); } },
+          { t: 'Shortcut: the 5th fret of the low E string is A, the same note as the open A string. That is how you tune by ear, and it means the two strings share one pattern, shifted five frets.', show: (L) => { L.note(0, 5, { ring: true }); L.note(1, 0, { ring: true }); L.link(at(0, 5), at(1, 0), 'same A'); Neck.play(0, 5, 0.2); Neck.play(1, 0, 0.9); } },
+          { t: 'Every natural note on the A string:', show: (L) => { L.band(1); L.seq(L.naturals(1, 0, 12), 0.38); } },
+          { t: 'Find each note on the 5th string.', check: { type: 'drill', gen: drillGen([1], 0, 12), n: 6, doneText: 'A string: done.' } },
+        ],
+      },
+      {
+        id: 'octaves', title: 'Octave shapes', kind: 'neck', mins: 3, blurb: 'Find any note again, higher up, with one shape.',
+        steps: [
+          { t: 'An <b>octave</b> is the same note, higher. From a note on the 6th or 5th string: go <b>up two strings and up two frets</b>.', show: (L) => { L.note(0, 3, { ring: true }); L.note(2, 5, { ring: true }); L.link(at(0, 3), at(2, 5), 'octave'); L.note(1, 3, { ring: true }); L.note(3, 5, { ring: true }); L.link(at(1, 3), at(3, 5), 'octave'); Neck.play(0, 3, 0.2); Neck.play(2, 5, 0.8); Neck.play(1, 3, 1.6); Neck.play(3, 5, 2.2); } },
+          { t: 'The B string is tuned differently, so when you cross it the shape stretches: from the 4th or 3rd string, go <b>up two strings and up three frets</b>.', show: (L) => { L.note(2, 5, { ring: true }); L.note(4, 8, { ring: true }); L.link(at(2, 5), at(4, 8), '+3 frets'); L.note(3, 5, { ring: true }); L.note(5, 8, { ring: true }); L.link(at(3, 5), at(5, 8), '+3 frets'); Neck.play(2, 5, 0.2); Neck.play(4, 8, 0.8); } },
+          { t: 'Chain the shapes and one note shows up all over the neck. Here is every G.', show: (L) => L.seq(allCells((m) => m % 12 === 7, 15).sort((a, b) => a.midi - b.midi), 0.3) },
+          { t: 'Your turn.', check: { type: 'tap', items: [
+            { prompt: 'This is A on the 6th string. Tap its octave, two strings up.', target: (s, f, m) => m === 57, show: (L) => L.note(0, 5, { ring: true }) },
+            { prompt: 'This is C on the 4th string. Tap its octave, crossing the B string.', target: (s, f, m) => m === 72, show: (L) => L.note(2, 10, { ring: true }) },
+          ] } },
+        ],
+      },
+      {
+        id: 'twelve', title: 'The 12th fret reset', kind: 'neck', mins: 2, blurb: 'Why learning frets 0 to 12 is enough.',
+        steps: [
+          { t: 'At the 12th fret every string starts over. The notes there match the open strings, just one octave higher.', show: (L) => { [0, 1, 2, 3, 4, 5].forEach((s) => { L.note(s, 0); L.note(s, 12, { ring: true, delay: 200 }); }); L.link(at(0, 0), at(0, 12), 'same E'); strum([0, 0, 0, 0, 0, 0], { at: 0.2 }); strum([12, 12, 12, 12, 12, 12], { at: 1.4 }); } },
+          { t: 'So the neck above fret 12 is a copy of the neck below it. Fret 15 is fret 3 again; fret 17 is fret 5 again.', show: (L) => { L.note(0, 3); L.note(0, 15, { ring: true }); L.link(at(0, 3), at(0, 15), 'both G'); L.note(1, 5); L.note(1, 17 > S.settings.frets ? 5 : 17); } },
+          { t: 'Check.', check: { type: 'quiz', items: [{ q: 'What note is at the 12th fret of the A string?', options: ['G♯', 'A', 'B'], answer: 1, why: 'Fret 12 always matches the open string.' }], doneText: 'Level 1 knowledge: locked in.' } },
+          { t: 'One more.', check: { type: 'tap', items: [{ prompt: 'Tap <b>E</b> at the 12th fret of the 1st (thinnest) string.', target: (s, f) => s === 5 && f === 12 }] } },
+        ],
+      },
+    ],
+  },
+  /* ------------------------------ LEVEL 2 ------------------------------ */
+  {
+    title: 'Chords from scratch', blurb: 'Intervals, how chords are built, and your first open chords.',
+    guide: [
+      ['Intervals', 'The distance between two notes, counted in half steps. <b>Minor 3rd</b> = 3, <b>major 3rd</b> = 4, <b>perfect 5th</b> = 7, <b>octave</b> = 12.'],
+      ['Triads', 'Three notes stacked in 3rds: <b>root, 3rd, 5th</b>. Major = root + 4 + 3 half steps. Minor = root + 3 + 4.'],
+      ['Major vs minor', 'Only the 3rd changes. Lower it one half step and major becomes minor. Major sounds bright; minor sounds darker.'],
+      ['Reading the colors', 'In chord shapes, <span style="color:#ff7b54">coral = root</span>, <span style="color:#ffd166">yellow = 3rd</span>, <span style="color:#5aa9ff">blue = 5th</span>, <span style="color:#c69cff">violet = 7th</span>.'],
+      ['First chords', 'E, A, D, then G, C, Em, Am. Change slowly and cleanly; speed comes later.'],
+      ['Power chords', 'Root + 5th, no 3rd. Movable: slide the shape and the chord takes the name of the root note.'],
+      ['Seventh chords', 'Add a 7th to a triad. <b>Dominant 7</b> (♭7, 10 half steps) sounds bluesy and restless. <b>Major 7</b> (11 half steps) sounds dreamy.'],
+    ],
+    lessons: [
+      {
+        id: 'intervals', title: 'Intervals: distance between notes', kind: 'ear', mins: 3, blurb: 'Hear the difference between a major 3rd, a minor 3rd and a 5th.',
+        steps: [
+          { t: 'An <b>interval</b> is the distance between two notes, counted in half steps (frets). C to E is 4 half steps.', show: (L) => { L.band(1); L.seq(run(1, [3, 4, 5, 6, 7]), 0.35, { label: (c, i) => i, color: '#f1e9da' }); L.later(2000, () => { L.note(1, 3, { ring: true }); L.note(1, 7, { ring: true }); L.link(at(1, 3), at(1, 7), '4 half steps'); }); } },
+          { t: 'Four half steps is a <b>major 3rd</b>. It sounds bright and happy.', show: (L) => { L.note(1, 3); L.note(1, 7); L.link(at(1, 3), at(1, 7), 'major 3rd'); L.play([48, 52], 0.5, 0.2); L.later(1300, () => L.together([48, 52])); } },
+          { t: 'Three half steps is a <b>minor 3rd</b>. One fret less, and it sounds darker.', show: (L) => { L.note(1, 3); L.note(1, 6); L.link(at(1, 3), at(1, 6), 'minor 3rd'); L.play([48, 51], 0.5, 0.2); L.later(1300, () => L.together([48, 51])); } },
+          { t: 'Seven half steps is a <b>perfect 5th</b>: strong and open. On guitar it sits one string up and two frets up.', show: (L) => { L.note(1, 3); L.note(2, 5); L.link(at(1, 3), at(2, 5), 'perfect 5th'); L.play([48, 55], 0.5, 0.2); L.later(1300, () => L.together([48, 55])); } },
+          { t: 'Listen and decide.', check: { type: 'ear', n: 4, gen: () => { const r = 45 + Math.floor(Math.random() * 10); const k = Math.floor(Math.random() * 3); const semi = [4, 3, 7][k]; return { q: 'Which interval is this?', options: ['Major 3rd', 'Minor 3rd', 'Perfect 5th'], answer: k, play: (L) => { L.play([r, r + semi], 0.55, 0.05); L.later(1300, () => L.together([r, r + semi])); } }; } } },
+        ],
+      },
+      {
+        id: 'triads', title: 'How a major chord is built', kind: 'theory', mins: 3, blurb: 'Root, 3rd and 5th: the recipe behind every major chord.',
+        steps: [
+          { t: 'A <b>chord</b> is three or more notes played together. The simplest is a <b>triad</b>: a root, a 3rd and a 5th.', show: (L) => { L.seq([at(1, 3), at(2, 2), at(3, 0)], 0.5, { iv: 0, ctx: [0, 4, 7] }); L.later(1700, () => L.together([48, 52, 55])); } },
+          { t: 'Start from C. Count up <b>4</b> half steps to E (the major 3rd), then <b>3</b> more to G (the 5th). C, E, G is C major.', show: (L) => { L.band(1); L.seq(run(1, [3, 7, 10]), 0.6, { iv: 0, ctx: [0, 4, 7] }); L.later(1900, () => { L.link(at(1, 3), at(1, 7), '+4'); L.link(at(1, 7), at(1, 10), '+3'); }); } },
+          { t: 'The recipe works from any note. G + 4 = B, + 3 = D. G, B, D is G major.', show: (L) => { L.band(0); L.seq(run(0, [3, 7, 10]), 0.6, { iv: 7, ctx: [0, 4, 7] }); L.later(1900, () => L.together([43, 47, 50])); } },
+          { t: 'On guitar, chord shapes just spread those three notes across the strings. In this C chord, the colors show each note’s job.', show: (L) => L.chord(0, 'maj') },
+          { t: 'Find the chord tones.', check: { type: 'tap', items: [
+            { prompt: 'Tap any <b>3rd</b> of C major (an E).', target: (s, f, m) => m % 12 === 4, show: (L) => L.chord(0, 'maj', 0, { silent: true }) },
+            { prompt: 'Tap any <b>5th</b> of C major (a G).', target: (s, f, m) => m % 12 === 7, show: (L) => L.chord(0, 'maj', 0, { silent: true }) },
+          ] } },
+        ],
+      },
+      {
+        id: 'minor', title: 'Major vs minor', kind: 'ear', mins: 2, blurb: 'One note moves, and the mood flips.',
+        steps: [
+          { t: 'Lower the 3rd by one half step and a major chord becomes <b>minor</b>. C major is C–E–G. C minor is C–E♭–G.', show: (L) => { L.band(1); L.seq(run(1, [3, 7, 10]), 0.45, { iv: 0, ctx: [0, 4, 7] }); L.later(1700, () => { Neck.clear(); L.band(1); L.seq(run(1, [3, 6, 10]), 0.45, { iv: 0, ctx: [0, 3, 7] }); }); } },
+          { t: 'Hear it on real chord shapes: <b>E major</b>, then <b>E minor</b>. Only one finger moves.', show: (L) => { L.chord(4, 'maj', 0.2); L.later(1800, () => L.chord(4, 'min', 0)); } },
+          { t: 'Major tends to sound bright and settled. Minor sounds sad, serious, or moody. Here is A major, then A minor.', show: (L) => { L.chord(9, 'maj', 0.2); L.later(1800, () => L.chord(9, 'min', 0)); } },
+          { t: 'Major or minor?', check: { type: 'ear', n: 4, gen: () => { const r = rand([0, 2, 4, 7, 9]); const k = Math.random() < 0.5 ? 0 : 1; return { q: 'Is this chord major or minor?', options: ['Major', 'Minor'], answer: k, play: () => hearChords([[r, k ? 'min' : 'maj']]), after: (L) => L.chord(r, k ? 'min' : 'maj', 0.1) }; } } },
+        ],
+      },
+      {
+        id: 'firstchords', title: 'Your first chords: E, A and D', kind: 'chord', mins: 4, blurb: 'Three chords that unlock hundreds of songs.',
+        steps: [
+          { t: '<b>E major</b>. The dots show where your fingers go; the colors show each note’s job. All six strings ring.', show: (L) => L.chord(4, 'maj') },
+          { t: '<b>A major</b>. Three fingers side by side at the 2nd fret. Skip the low E string (×).', show: (L) => L.chord(9, 'maj') },
+          { t: '<b>D major</b>. A small triangle on the top three strings. Play only the top four strings.', show: (L) => L.chord(2, 'maj') },
+          { t: 'Switch slowly: A, D, E, A. Clean changes first, speed later. Tip: switch the moment you strum the last beat.', show: (L) => L.progression([[9, 'maj'], [2, 'maj'], [4, 'maj'], [9, 'maj']], 1.5) },
+          { t: 'Play each chord on your guitar. Fretwave listens and tells you which string needs work.', check: { type: 'chord', items: [{ root: 4, id: 'maj' }, { root: 9, id: 'maj' }, { root: 2, id: 'maj' }] } },
+        ],
+      },
+      {
+        id: 'morechords', title: 'G, C, Em and Am', kind: 'chord', mins: 4, blurb: 'Four more open chords, and how they connect.',
+        steps: [
+          { t: '<b>G major</b>: a wide shape with notes on both outer strings.', show: (L) => L.chord(7, 'maj') },
+          { t: '<b>C major</b>: a diagonal staircase. Skip the low E string.', show: (L) => L.chord(0, 'maj') },
+          { t: '<b>E minor</b>: the easiest chord on guitar. Two fingers, all six strings.', show: (L) => L.chord(4, 'min') },
+          { t: '<b>A minor</b> looks like C with one finger moved: the ring finger drops from the A string to the G string.', show: (L) => { L.chord(0, 'maj', 0.2); L.later(1900, () => L.chord(9, 'min', 0)); } },
+          { t: 'Now play them on your guitar.', check: { type: 'chord', items: [{ root: 7, id: 'maj' }, { root: 0, id: 'maj' }, { root: 9, id: 'min' }] } },
+        ],
+      },
+      {
+        id: 'power', title: 'Power chords', kind: 'neck', mins: 3, blurb: 'One movable shape for every rock chord.',
+        steps: [
+          { t: 'A <b>power chord</b> is just a root and a 5th. No 3rd, so it is neither major nor minor, which is why it sounds huge with distortion.', show: (L) => L.voicing([3, 5, 5, -1, -1, -1], 7, [0, 7], 0.2) },
+          { t: 'The shape is <b>movable</b>. Slide it so the root sits on any note of the low E string, and the chord takes that note’s name: G5, A5, B5, C5.', show: (L) => { [[3, 7], [5, 9], [7, 11], [8, 0]].forEach(([f, r], i) => L.later(i * 1100 + 100, () => { Neck.clear(); L.voicing([f, f + 2, f + 2, -1, -1, -1], r, [0, 7], 0); })); } },
+          { t: 'The same shape works with the root on the A string. Here is C5 and D5.', show: (L) => { L.voicing([-1, 3, 5, 5, -1, -1], 0, [0, 7], 0.2); L.later(1300, () => { Neck.clear(); L.voicing([-1, 5, 7, 7, -1, -1], 2, [0, 7], 0); }); } },
+          { t: 'Build one.', check: { type: 'tap', items: [
+            { prompt: 'Tap the <b>root</b> of an A5 power chord on the 6th string.', target: (s, f) => s === 0 && f === 5 },
+            { prompt: 'Now tap where its <b>5th</b> goes (one string up, two frets up).', target: (s, f) => s === 1 && f === 7, show: (L) => L.note(0, 5, { ring: true }) },
+          ] } },
+        ],
+      },
+      {
+        id: 'sevenths', title: 'Seventh chords', kind: 'ear', mins: 3, blurb: 'Add one note for blues, jazz and tension.',
+        steps: [
+          { t: 'Add one more note to a triad and you get a <b>seventh chord</b>. A <b>dominant 7</b> adds the ♭7: 10 half steps above the root. Here is G7.', show: (L) => L.chord(7, '7') },
+          { t: 'Hear it: G major, then G7. The ♭7 adds tension that wants to move somewhere, usually to C.', show: (L) => { L.chord(7, 'maj', 0.2); L.later(1800, () => L.chord(7, '7', 0)); L.later(3600, () => L.chord(0, 'maj', 0)); } },
+          { t: 'A <b>major 7</b> uses the natural 7th (11 half steps). It sounds soft and dreamy. Compare C, then Cmaj7.', show: (L) => { L.chord(0, 'maj', 0.2); L.later(1800, () => L.chord(0, 'maj7', 0)); } },
+          { t: 'Which kind of chord?', check: { type: 'ear', n: 4, gen: () => { const r = rand([0, 2, 7, 9, 4]); const ids = ['maj', '7', 'maj7']; const k = Math.floor(Math.random() * 3); return { q: 'Plain major, dominant 7 or major 7?', options: ['Major', 'Dominant 7', 'Major 7'], answer: k, play: () => hearChords([[r, ids[k]]]), after: (L) => L.chord(r, ids[k], 0.1) }; } } },
+        ],
+      },
+    ],
+  },
+  /* ------------------------------ LEVEL 3 ------------------------------ */
+  {
+    title: 'Keys and progressions', blurb: 'The major scale, keys, and why certain chords sound right together.',
+    guide: [
+      ['The major scale', 'Steps: <b>W W H W W W H</b> (whole, whole, half, whole, whole, whole, half). Start on any note to build its major scale.'],
+      ['Keys', 'A key is a home note plus the scale built on it. C major has no sharps or flats. G has 1♯ (F♯), D has 2♯, A has 3♯, E has 4♯. F has 1♭ (B♭), B♭ has 2♭.'],
+      ['Chords in a key', 'Build a triad on each scale note: <b>I ii iii IV V vi vii°</b>. Major, minor, minor, major, major, minor, diminished. In C: C Dm Em F G Am B°.'],
+      ['Famous progressions', '<b>I–V–vi–IV</b> (pop), <b>I–IV–V</b> (blues and rock), <b>ii–V–I</b> (jazz), <b>vi–IV–I–V</b> (moody pop).'],
+      ['Circle of fifths', 'Each step clockwise goes up a 5th and adds one sharp. Neighbours on the circle share six of their seven notes.'],
+      ['Relative minor', 'Every major key shares its notes with a minor key that starts on its 6th note. C major ↔ A minor, G major ↔ E minor. On the neck: 3 frets below the major root.'],
+    ],
+    lessons: [
+      {
+        id: 'majorscale', title: 'The major scale', kind: 'theory', mins: 3, blurb: 'The do-re-mi pattern, and how to build it from any note.',
+        steps: [
+          { t: 'The major scale is the do-re-mi you already know. It follows one step pattern: <b>whole, whole, half, whole, whole, whole, half</b>.', show: (L) => { L.band(1); L.seq(run(1, [3, 5, 7, 8, 10, 12, 14, 15]), 0.42, { iv: 0, ctx: MAJ }); } },
+          { t: 'Start that pattern on any note and you get its major scale. Here is <b>G major</b> on the low E string.', show: (L) => { L.band(0); L.seq(run(0, [3, 5, 7, 8, 10, 12, 14, 15]), 0.42, { iv: 7, ctx: MAJ }); } },
+          { t: 'To keep the pattern, G major needs <b>F♯</b> instead of F. That one sharp is why we say G major “has one sharp”.', show: (L) => { L.band(0); run(0, [3, 5, 7, 8, 10, 12, 14, 15]).forEach((c) => L.note(c.s, c.f, { ring: c.f === 14 })); Neck.play(0, 14, 0.3); } },
+          { t: 'Build <b>D major</b> on the D string: start on the open string and tap each note going up, following W W H W W W H.', check: { type: 'seq', exact: true, prompt: 'D major on the D string, open to fret 12', cells: run(2, [0, 2, 4, 5, 7, 9, 11, 12]), show: (L) => L.band(2) } },
+        ],
+      },
+      {
+        id: 'keys', title: 'Keys and key signatures', kind: 'theory', mins: 3, blurb: 'What “the key of G” actually means.',
+        steps: [
+          { t: 'A <b>key</b> is a home base: a set of notes a song mostly uses, with one note that feels like home. In the key of G, everything wants to land on G.', show: (L) => { L.scale(7, MAJ, [2, 5]); L.later(200, () => L.play([43, 45, 47, 48, 50, 52, 54, 55], 0.3)); L.later(2800, () => strum([3, 2, 0, 0, 0, 3])); } },
+          { t: 'Each major key has its own count of sharps or flats. <b>C</b>: none. <b>G</b>: 1 (F♯). <b>D</b>: 2 (F♯ C♯). <b>A</b>: 3. <b>E</b>: 4.', html: chips([['0', 'C', '#ff7b54'], ['1♯', 'G', '#5aa9ff'], ['2♯', 'D', '#ffd166'], ['3♯', 'A', '#c69cff'], ['4♯', 'E', '#8be0a4']]), show: (L) => L.scale(2, MAJ, [0, 5], { names: true }) },
+          { t: 'Flat keys go the other way. <b>F</b> has one flat (B♭). <b>B♭</b> has two (B♭ E♭).', show: (L) => L.scale(5, MAJ, [0, 5], { names: true }) },
+          { t: 'Check.', check: { type: 'quiz', items: [
+            { q: 'How many sharps are in D major?', options: ['None', 'One', 'Two', 'Three'], answer: 2, why: 'D major uses F♯ and C♯.' },
+            { q: 'Which key has no sharps or flats?', options: ['G major', 'C major', 'F major'], answer: 1 },
+          ] } },
+        ],
+      },
+      {
+        id: 'diatonic', title: 'Chords in a key', kind: 'theory', mins: 4, blurb: 'The seven chords that belong together, and their numbers.',
+        steps: [
+          { t: 'Build a triad on each note of the major scale using only notes from that key. You get seven chords that naturally sound good together. In C:', html: chips(['C', 'Dm', 'Em', 'F', 'G', 'Am', 'B°'].map((c, i) => [['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'][i], c, noteColor([0, 2, 4, 5, 7, 9, 11][i])])), show: () => hearChords([[0, 'maj'], [2, 'min'], [4, 'min'], [5, 'maj'], [7, 'maj'], [9, 'min'], [11, 'dim']], 0.75) },
+          { t: 'The pattern never changes: <b>major, minor, minor, major, major, minor, diminished</b>. Musicians number them with Roman numerals: capitals for major, lowercase for minor.' },
+          { t: 'Same pattern in G major: G, Am, Bm, C, D, Em, F♯°. Learn the numbers and you can play any song in any key.', html: chips(['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F♯°'].map((c, i) => [['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'][i], c, noteColor([7, 9, 11, 0, 2, 4, 6][i])])), show: () => hearChords([[7, 'maj'], [9, 'min'], [11, 'min'], [0, 'maj'], [2, 'maj'], [4, 'min']], 0.75) },
+          { t: 'Check.', check: { type: 'quiz', items: [
+            { q: 'In the key of C, which chord is the V?', options: ['F', 'G', 'Am'], answer: 1, why: 'C D E F G: the 5th note is G, and V is major.' },
+            { q: 'Is the ii chord major or minor?', options: ['Major', 'Minor'], answer: 1, why: 'Lowercase numerals are minor: ii, iii and vi.' },
+            { q: 'In G major, what is the vi chord?', options: ['Em', 'E', 'Am'], answer: 0 },
+          ] } },
+        ],
+      },
+      {
+        id: 'progressions', title: 'Progressions that power songs', kind: 'play', mins: 3, blurb: 'I–V–vi–IV, the 12-bar blues, and how to hear them.',
+        steps: [
+          { t: '<b>I–V–vi–IV</b> is one of the most used progressions in pop music. In G that is G, D, Em, C. Watch the shapes change.', show: (L) => L.progression([[7, 'maj'], [2, 'maj'], [4, 'min'], [0, 'maj']], 1.4) },
+          { t: '<b>I–IV–V</b> powers blues and rock and roll. In A that is A, D and E.', show: (L) => L.progression([[9, 'maj'], [2, 'maj'], [4, 'maj'], [9, 'maj']], 1.2) },
+          { t: 'The Jam room plays these with a full band and lights up the notes that fit each chord.', html: '<button class="btn" data-goto="jam">Open the Jam room after this lesson</button>' },
+          { t: 'Name that progression.', check: { type: 'ear', n: 3, gen: () => { const r = rand([0, 2, 7, 9]); const k = Math.random() < 0.5 ? 0 : 1; const prog = k === 0 ? [[r, 'maj'], [(r + 7) % 12, 'maj'], [(r + 9) % 12, 'min'], [(r + 5) % 12, 'maj']] : [[r, 'maj'], [(r + 5) % 12, 'maj'], [(r + 7) % 12, 'maj'], [r, 'maj']]; return { q: 'Which progression did you hear?', options: ['I–V–vi–IV (has a minor chord)', 'I–IV–V–I (all major)'], answer: k, play: () => hearChords(prog, 1) }; } } },
+        ],
+      },
+      {
+        id: 'circle', title: 'The circle of fifths', kind: 'theory', mins: 3, blurb: 'One picture that maps every key.',
+        steps: [
+          { t: 'Go up a perfect 5th from C and you land on G. Keep going: D, A, E, B… Each step adds one sharp to the key.', show: (L) => { L.seq([at(1, 3), at(2, 5), at(3, 7), at(4, 10), at(5, 12)], 0.7, { ring: true }); L.later(3600, () => { L.link(at(1, 3), at(2, 5), '5th'); L.link(at(2, 5), at(3, 7), '5th'); }); } },
+          { t: 'Arrange all twelve keys that way and you get the <b>circle of fifths</b>. Clockwise adds sharps; counter-clockwise adds flats.', html: () => circleSVG() },
+          { t: 'Keys next to each other share six of their seven notes, which is why songs move between neighbours so smoothly. On guitar, a 5th is always one string up and two frets up (three when crossing to the B string).', show: (L) => L.voicing([3, 5, -1, -1, -1, -1], 7, [0, 7], 0.2) },
+          { t: 'Check.', check: { type: 'quiz', items: [
+            { q: 'What is a perfect 5th above D?', options: ['G', 'A', 'B'], answer: 1, why: 'D, E, F♯, G, A: five letters up.' },
+            { q: 'Moving clockwise on the circle adds…', options: ['a sharp', 'a flat', 'nothing'], answer: 0 },
+          ] } },
+        ],
+      },
+      {
+        id: 'relative', title: 'The relative minor', kind: 'theory', mins: 3, blurb: 'Every major key has a minor twin with the same notes.',
+        steps: [
+          { t: 'Every major key has a <b>relative minor</b> that uses exactly the same notes. It starts on the 6th note of the major scale. For C major, that is A.', show: (L) => { L.scale(0, MAJ, [0, 5], { names: true }); L.later(300, () => { L.all(9, { ring: true }, 5); }); } },
+          { t: 'C major and A minor share every note. What changes is which note feels like home. Listen: C to C, then A to A.', show: (L) => { L.play([48, 50, 52, 53, 55, 57, 59, 60], 0.28, 0.1); L.play([45, 47, 48, 50, 52, 53, 55, 57], 0.28, 2.6); } },
+          { t: 'Quick finder: the relative minor root is <b>3 frets below</b> the major root. G major (fret 3) → E minor (open).', show: (L) => { L.note(0, 3, { ring: true }); L.note(0, 0, { ring: true }); L.link(at(0, 3), at(0, 0), '3 frets down'); L.later(400, () => L.chord(7, 'maj', 0.2, { clear: false })); } },
+          { t: 'Check.', check: { type: 'quiz', items: [{ q: 'What is the relative minor of G major?', options: ['Am', 'Em', 'Bm'], answer: 1 }] } },
+          { t: 'One more.', check: { type: 'tap', items: [{ prompt: 'C major’s root is at fret 8 on the 6th string. Tap its relative minor root on the same string.', target: (s, f) => s === 0 && f === 5, show: (L) => L.note(0, 8, { ring: true }) }] } },
+        ],
+      },
+    ],
+  },
+  /* ------------------------------ LEVEL 4 ------------------------------ */
+  {
+    title: 'Scales for soloing', blurb: 'Pentatonic shapes, the blues scale, and landing on the right notes.',
+    guide: [
+      ['Minor pentatonic', 'Five notes: <b>1, ♭3, 4, 5, ♭7</b>. In A: A C D E G. Shape 1 sits between frets 5 and 8.'],
+      ['Five shapes', 'Shapes 1 to 5 link end to end and cover the whole neck. Each shares notes with its neighbours.'],
+      ['Changing key', 'Move every shape so its root lands on the new key note. The shapes never change, only where they sit.'],
+      ['Blues scale', 'Minor pentatonic plus the <b>♭5</b> “blue note”. Slide through it; don’t park on it.'],
+      ['Chord tones', 'Over each chord, its root, 3rd and 5th are the strongest notes to land on. Jam mode lights them up live.'],
+      ['Major scale shapes', 'Three notes per string covers the major scale in one hand position and makes speed practice easy.'],
+    ],
+    lessons: [
+      {
+        id: 'pent1', title: 'Minor pentatonic: shape 1', kind: 'neck', mins: 3, blurb: 'The scale behind most rock and blues solos.',
+        steps: [
+          { t: 'The <b>minor pentatonic</b> has five notes: 1, ♭3, 4, 5 and ♭7. It is the scale behind most rock and blues solos. Here it is in A.', show: (L) => { L.shape(pentShape(9, 1), 9, MINPENT); L.scroll(6); } },
+          { t: 'Shape 1 in A sits between frets 5 and 8: two notes on every string. First finger at fret 5, pinky at fret 8. Listen to it going up.', show: (L) => { L.shade([4, 9]); L.seq(pentShape(9, 1), 0.3, { iv: 9, ctx: MINPENT }); } },
+          { t: 'The roots (A) are your home base: fret 5 on the 6th string, fret 7 on the 4th, fret 5 on the 1st.', show: (L) => { L.shape(pentShape(9, 1), 9, MINPENT, { cls: 'dim' }); allCells((m, s, f) => m % 12 === 9 && f >= 5 && f <= 8).forEach((c) => L.iv(c.s, c.f, 9, MINPENT)); } },
+          { t: 'Play shape 1 going up, from the 6th string to the 1st.', check: { type: 'seq', exact: false, prompt: 'A minor pentatonic, shape 1, ascending', cells: () => pentShape(9, 1).map((c) => at(c.s, c.f)) } },
+        ],
+      },
+      {
+        id: 'pentall', title: 'All five pentatonic shapes', kind: 'neck', mins: 3, blurb: 'Link the shapes and the whole neck opens up.',
+        steps: [
+          { t: 'Shape 1 is one piece of a bigger puzzle. Five shapes link end to end and cover the entire neck. Watch them light up in order.', show: (L) => { L.scale(9, MINPENT, [0, 15], { cls: 'ghost' }); [1, 2, 3, 4, 5].forEach((n, i) => L.later(i * 1300, () => { Neck.clear(); L.scale(9, MINPENT, [0, 15], { cls: 'ghost' }); L.shape(pentShape(9, n), 9, MINPENT, { stagger: 8 }); })); } },
+          { t: 'Neighbouring shapes share notes: the right edge of shape 1 is the left edge of shape 2. Learn shapes 1 and 2 first; they cover the most common solo spots.', show: (L) => { L.shape(pentShape(9, 1), 9, MINPENT); L.later(500, () => pentShape(9, 2).forEach((c) => { if (!Neck.has(c.s, c.f)) L.iv(c.s, c.f, 9, MINPENT, { cls: 'dim' }); })); L.scroll(8); } },
+          { t: 'To change key, move everything. Slide shape 1 up three frets and you are in C minor.', show: (L) => { L.shape(pentShape(0, 1), 0, MINPENT); L.scroll(9); } },
+          { t: 'Check.', check: { type: 'tap', items: [{ prompt: 'Tap any <b>A root</b> inside shape 2 (frets 7 to 10).', target: (s, f, m) => m % 12 === 9 && f >= 7 && f <= 10, show: (L) => L.shape(pentShape(9, 2), 9, MINPENT, { cls: 'dim' }) }] } },
+        ],
+      },
+      {
+        id: 'blues', title: 'The blues scale', kind: 'ear', mins: 3, blurb: 'One extra note: the blue note.',
+        steps: [
+          { t: 'Add one note to the minor pentatonic, the <b>♭5</b>, and you get the blues scale. That extra note is called the <b>blue note</b>.', show: (L) => { boxCells(9, BLUES, 5, 8).forEach((c) => L.iv(c.s, c.f, 9, BLUES, { ring: c.pc === 3 })); L.scroll(6); } },
+          { t: 'Use it as a passing note: slide through it on the way to the 5th. Listen.', show: (L) => { boxCells(9, BLUES, 5, 8).forEach((c) => L.iv(c.s, c.f, 9, BLUES, { cls: 'dim' })); L.seq([at(1, 5), at(1, 6), at(1, 7), at(2, 5), at(2, 7)], 0.26, { iv: 9, ctx: BLUES }); } },
+          { t: 'Which one used the blue note?', check: { type: 'ear', n: 3, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; const a = [57, 60, 62, 64, 62, 60, 57], b = [57, 60, 62, 63, 64, 62, 57]; return { q: 'Which phrase used the blue note?', options: ['First phrase', 'Second phrase'], answer: k, play: (L) => { L.play(k === 0 ? b : a, 0.22, 0.05); L.play(k === 0 ? a : b, 0.22, 2.0); } }; } } },
+        ],
+      },
+      {
+        id: 'targets', title: 'Target the chord tones', kind: 'play', mins: 3, blurb: 'Why some notes sound better at the chord change.',
+        steps: [
+          { t: 'The scale tells you which notes are safe. The <b>chord tones</b> tell you which notes sound best right now. Over A7, aim for A, C♯, E and G.', show: (L) => { L.scale(9, MINPENT, [4, 9], { cls: 'ghost' }); allCells((m, s, f) => f >= 4 && f <= 9 && [9, 1, 4, 7].includes(m % 12)).forEach((c) => L.iv(c.s, c.f, 9, [0, 4, 7, 10])); hearChords([[9, '7']]); } },
+          { t: 'When the band moves to D7, the targets move too: D, F♯, A and C.', show: (L) => { L.scale(9, MINPENT, [4, 9], { cls: 'ghost' }); allCells((m, s, f) => f >= 4 && f <= 9 && [2, 6, 9, 0].includes(m % 12)).forEach((c) => L.iv(c.s, c.f, 2, [0, 4, 7, 10])); hearChords([[2, '7']]); } },
+          { t: 'Landing on a chord tone right at the change makes a solo sound intentional. In the Jam room, these light up for you as the chords change.', html: '<button class="btn" data-goto="jam">Try it in the Jam room</button>' },
+          { t: 'Check.', check: { type: 'tap', items: [{ prompt: 'The chord is D major. Tap its <b>3rd</b> (F♯) between frets 4 and 9.', target: (s, f, m) => m % 12 === 6 && f >= 4 && f <= 9, show: (L) => L.shade([4, 9]) }] } },
+        ],
+      },
+      {
+        id: 'major3nps', title: 'The major scale, three notes per string', kind: 'neck', mins: 3, blurb: 'A whole major scale under one hand.',
+        steps: [
+          { t: 'The major scale has shapes too. A handy one puts <b>three notes on every string</b>. Here is G major starting at fret 3.', show: (L) => { L.shape(G3NPS, 7, MAJ); L.scroll(5); } },
+          { t: 'Play it slowly with an even pulse. Turn on the metronome (top right) and its speed trainer to push the tempo a little each time.', show: (L) => { L.seq(G3NPS, 0.3, { iv: 7, ctx: MAJ }); } },
+          { t: 'Play the first two strings of the shape.', check: { type: 'seq', exact: false, prompt: 'G major, three notes per string: first six notes', cells: G3NPS.slice(0, 6) } },
+        ],
+      },
+    ],
+  },
+  /* ------------------------------ LEVEL 5 ------------------------------ */
+  {
+    title: 'See the whole neck', blurb: 'CAGED, triads, modes and reading tab: the big picture.',
+    guide: [
+      ['CAGED', 'The five open chord shapes, <b>C A G E D</b>, can be moved up the neck. For any chord they appear in that order, linked end to end.'],
+      ['Finding roots', 'Each CAGED shape has its root on a known string. Find the root, drop the shape around it.'],
+      ['Triads on top strings', 'Three-note shapes on the G, B and high e strings. One chord appears in three stacks (inversions) as you move up.'],
+      ['Modes', 'Start the major scale on a different note and you get a mode. <b>Dorian</b> = minor with a bright 6th. <b>Mixolydian</b> = major with a ♭7. <b>Aeolian</b> = natural minor.'],
+      ['Reading tab', 'Six lines = six strings, high e on top. Numbers are frets. Read left to right; stacked numbers are played together.'],
+    ],
+    lessons: [
+      {
+        id: 'caged', title: 'The CAGED system', kind: 'neck', mins: 4, blurb: 'Five shapes that connect every chord across the neck.',
+        steps: [
+          { t: 'There are five open chord shapes: <b>C, A, G, E and D</b>. Spell them out and you get CAGED.', show: (L) => { [[0], [9], [7], [4], [2]].forEach(([r], i) => L.later(i * 1300 + 100, () => L.chord(r, 'maj', 0, { maxBase: 0 }))); } },
+          { t: 'Each shape can slide up the neck to play any chord. Here are all five shapes for <b>C major</b>, linked end to end.', show: (L) => { Neck.caged(0); } },
+          { t: 'Learn where the root sits in each shape and you can find any chord anywhere. White rings mark the roots.', show: (L) => { Neck.caged(0, { rootsOnly: true }); } },
+          { t: 'Check.', check: { type: 'tap', items: [{ prompt: 'In the <b>E shape</b> of C major (around fret 8), tap the root on the 6th string.', target: (s, f) => s === 0 && f === 8, show: () => Neck.caged(0, { only: 'E', quiet: true }) }] } },
+        ],
+      },
+      {
+        id: 'toptriads', title: 'Triads on the top strings', kind: 'neck', mins: 3, blurb: 'Small, bright chord shapes for rhythm parts.',
+        steps: [
+          { t: 'Strip a chord to three notes on the top three strings and you get small, bright shapes. Great for rhythm parts and for seeing chords inside scales.', show: (L) => L.voicing([-1, -1, -1, 4, 3, 3], 7, [0, 4, 7], 0.2) },
+          { t: 'The same three notes of G major appear in three stacks as you move up the neck. Each has a different note on top.', show: (L) => { [[-1, -1, -1, 4, 3, 3], [-1, -1, -1, 7, 8, 7], [-1, -1, -1, 12, 12, 10]].forEach((fr, i) => L.later(i * 1400 + 100, () => { Neck.clear(); L.voicing(fr, 7, [0, 4, 7], 0); })); L.scroll(8); } },
+          { t: 'Check.', check: { type: 'tap', items: [{ prompt: 'In the G triad at frets 7 to 8, tap the <b>3rd</b> (B).', target: (s, f) => s === 5 && f === 7, show: (L) => L.voicing([-1, -1, -1, 7, 8, 7], 7, [0, 4, 7], 0, { silent: true }) }] } },
+        ],
+      },
+      {
+        id: 'modes', title: 'Modes in one picture', kind: 'theory', mins: 4, blurb: 'Same notes, different home, different mood.',
+        steps: [
+          { t: 'Play the notes of C major, but treat <b>D</b> as home, and you get <b>D Dorian</b>. Same notes, new center, new mood.', show: (L) => { L.scale(0, MAJ, [0, 5], { names: true, cls: 'dim' }); L.later(300, () => L.all(2, { ring: true }, 5)); } },
+          { t: 'Each mode is the major scale started from a different note.', html: chips([['1', 'Ionian (major)', '#ff7b54'], ['2', 'Dorian', '#8be0a4'], ['3', 'Phrygian', '#ffd166'], ['4', 'Lydian', '#6fe0d6'], ['5', 'Mixolydian', '#5aa9ff'], ['6', 'Aeolian (minor)', '#f59bdc'], ['7', 'Locrian', '#c69cff']]) },
+          { t: 'Listen to the moods. <b>Dorian</b> is minor with a brighter 6th. <b>Mixolydian</b> is major with a bluesy ♭7.', show: (L) => { L.play([50, 52, 53, 55, 57, 59, 60, 62], 0.26, 0.1); L.play([43, 45, 47, 48, 50, 52, 53, 55], 0.26, 2.6); } },
+          { t: 'Check.', check: { type: 'quiz', items: [
+            { q: 'D Dorian uses the same notes as which major scale?', options: ['C major', 'D major', 'G major'], answer: 0 },
+            { q: 'Which mode is the natural minor scale?', options: ['Lydian', 'Aeolian', 'Ionian'], answer: 1 },
+          ] } },
+        ],
+      },
+      {
+        id: 'tab', title: 'Reading tab', kind: 'play', mins: 3, blurb: 'Read guitar music in five minutes.',
+        steps: [
+          { t: '<b>Tab</b> is guitar music made simple. Six lines are the six strings, with the high e on top. Numbers tell you which fret to play.', html: tabBlock(['e|--0--0--1--3--3--1--0-----|', 'B|-------------------------3-|', 'G|---------------------------|', 'D|---------------------------|', 'A|---------------------------|', 'E|---------------------------|']), show: (L) => L.seq([at(5, 0), at(5, 0), at(5, 1), at(5, 3), at(5, 3), at(5, 1), at(5, 0), at(4, 3)], 0.4) },
+          { t: 'Read left to right. Numbers stacked on top of each other are played together, like a chord.', html: tabBlock(['e|--0--|', 'B|--1--|', 'G|--0--|', 'D|--2--|', 'A|--3--|', 'E|-----|']), show: (L) => L.chord(0, 'maj') },
+          { t: 'The Tab player can play any tab you paste, at any speed, right on the neck.', html: '<button class="btn" data-goto="tabs">Open the Tab player after this lesson</button>' },
+          { t: 'Play the first line of tab from step 1.', check: { type: 'seq', exact: true, prompt: 'Follow the tab: e string 0, 0, 1, 3', cells: [at(5, 0), at(5, 0), at(5, 1), at(5, 3)] } },
+        ],
+      },
+    ],
+  },
+];
+
+/* ================= CAGED map ================= */
+const CAGED_SHAPES = [
+  { name: 'C', rootStr: 1, off: [null, 0, -1, -3, -2, -3], color: '#ff7b54' },
+  { name: 'A', rootStr: 1, off: [null, 0, 2, 2, 2, 0], color: '#ffd166' },
+  { name: 'G', rootStr: 0, off: [0, -1, -3, -3, -3, 0], color: '#8be0a4' },
+  { name: 'E', rootStr: 0, off: [0, 2, 2, 1, 0, 0], color: '#5aa9ff' },
+  { name: 'D', rootStr: 2, off: [null, null, 0, 2, 3, 2], color: '#c69cff' },
+];
+const isStdGuitar = () => S.settings.instrument === 'guitar' && S.settings.tuning === 'standard';
+function cagedShapes(root) {
+  const tun = strings();
+  return CAGED_SHAPES.map((sh) => {
+    const rf = mod(root - tun[sh.rootStr], 12);
+    let frets = sh.off.map((o) => (o == null ? null : rf + o));
+    if (Math.min(...frets.filter((f) => f != null)) < 0) frets = frets.map((f) => (f == null ? null : f + 12));
+    frets = frets.map((f) => (f == null ? -1 : f));
+    return Object.assign({}, sh, { frets, lo: Math.min(...frets.filter((f) => f >= 0)), hi: Math.max(...frets) });
+  }).sort((a, b) => a.lo - b.lo);
+}
+Neck.caged = function (root, o = {}) {
+  if (!isStdGuitar()) { toast('The CAGED map is drawn for a standard-tuned guitar.'); return []; }
+  this.clear();
+  const shapes = cagedShapes(root);
+  const iv = [0, 4, 7];
+  shapes.forEach((sh) => {
+    if (o.only && sh.name !== o.only) return;
+    if (sh.hi > this.g.F) return;
+    const x0 = sh.lo === 0 ? this.g.nutX - 80 : this.g.xs[sh.lo - 1] + 2, x1 = this.g.xs[Math.min(sh.hi, this.g.F)] - 2;
+    const used = sh.frets.map((f, s) => (f >= 0 ? s : null)).filter((s) => s != null);
+    const yTop = this.y(Math.max(...used)) - 22, yBot = this.y(Math.min(...used)) + 22;
+    this.rect(x0, x1 - x0, { y: yTop, height: yBot - yTop, rx: 16, fill: sh.color, opacity: 0.13, stroke: sh.color, 'stroke-width': 2, 'stroke-opacity': 0.6 }, this.fxBelow);
+    const t = el('text', { x: this.X((x0 + x1) / 2), y: this.g.boardBot + 12, class: 'caged-label', fill: sh.color, 'text-anchor': 'middle' }, this.fx); t.textContent = sh.name + ' shape';
+    sh.frets.forEach((f, s) => {
+      if (f < 0) return;
+      const semi = mod(midiAt(s, f) - root, 12);
+      if (o.rootsOnly && semi !== 0) { this.mark(s, f, { label: intervalInfo(semi, iv)[0], color: intervalColor(semi, iv), cls: 'ghost' }); return; }
+      this.mark(s, f, { label: intervalInfo(semi, iv)[0], color: intervalColor(semi, iv), ring: semi === 0, ringColor: '#fff' });
+    });
+  });
+  return shapes;
+};
+
+/* ================= Jam room ================= */
+const JAM_STYLES = {
+  pop: { name: 'Pop', feel: 'I–V–vi–IV', bars: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj']], scale: 'majpent', swing: 0, bpm: 96 },
+  rock: { name: 'Rock', feel: 'I–IV–V–IV', bars: [[0, 'maj'], [5, 'maj'], [7, 'maj'], [5, 'maj']], scale: 'majpent', swing: 0, bpm: 118 },
+  blues: { name: '12-bar blues', feel: 'I7–IV7–V7', bars: [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7].map((x) => [x, '7']), scale: 'blues', swing: 0.62, bpm: 92 },
+  minor: { name: 'Minor ballad', feel: 'i–VI–III–VII', bars: [[0, 'min'], [8, 'maj'], [3, 'maj'], [10, 'maj']], scale: 'minpent', swing: 0, bpm: 76 },
+};
+const Jam = {
+  id: 'jam', nav: 'Jam', title: 'Jam room',
+  help: 'Pick a style and key. A band plays, and the neck shows the scale with the current chord’s notes lit up, so you always know where to land.',
+  style: 'blues', key: 9, bpm: null, layers: { drums: true, bass: true, chords: true }, scaleMode: 'auto', playing: false, listen: false,
+  mount(p) {
+    this.p = p; this.bar = 0; this.step = 0;
+    const st = JAM_STYLES[this.style]; if (!this.bpm) this.bpm = st.bpm;
+    p.innerHTML = `<div class="panel-grid">
+      <div class="controls">
+        <div class="jam-now">
+          <div><small class="muted">Now</small><div class="jam-chord" id="jm-now">–</div></div>
+          <div><small class="muted">Next</small><div class="jam-next" id="jm-next">–</div></div>
+          <div class="beats" id="jm-beats">${'<i></i>'.repeat(4)}</div>
+        </div>
+        <div class="prog" id="jm-bars"></div>
+        <div class="wrap"><button class="btn btn-primary btn-big" id="jm-play">${ICONS.play}Start the band</button>
+          <button class="btn" id="jm-listen">${ICONS.mic}Show what I play</button></div>
+        <div id="jm-score" class="muted" style="font-size:14px"></div>
+        <div class="legend"><span><i style="background:#ffc857"></i>Notes of the current chord</span><span><i style="background:rgba(241,233,218,.4)"></i>Rest of the scale</span><span>Use headphones so the mic hears only you</span></div>
+      </div>
+      <div class="controls">
+        <div class="row row-wide"><span class="lbl">Style</span>${seg('jm-style', Object.entries(JAM_STYLES).map(([k, v]) => [k, v.name]), this.style)}</div>
+        <div class="row row-wide"><span class="lbl">Key</span><div class="wrap" id="jm-key">${noteChips(this.key)}</div></div>
+        <div class="row"><span class="lbl">Tempo</span><div class="slider"><input type="range" min="50" max="180" value="${this.bpm}" id="jm-bpm" aria-label="Tempo"><output id="jm-bpm-o">${this.bpm} bpm</output></div></div>
+        <div class="row"><span class="lbl">Scale shown</span>${seg('jm-sc', [['auto', 'Best fit'], ['pent', 'Pentatonic'], ['full', 'Full scale'], ['none', 'Chord tones only']], this.scaleMode)}</div>
+        <div class="row"><span class="lbl">Band</span><div class="wrap">${['drums', 'bass', 'chords'].map((k) => `<button class="chip" data-l="${k}" aria-pressed="${this.layers[k]}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
+      </div></div>`;
+    wireSeg(p, 'jm-style', (v) => { this.style = v; this.bpm = JAM_STYLES[v].bpm; $('#jm-bpm', p).value = this.bpm; $('#jm-bpm-o', p).textContent = this.bpm + ' bpm'; this.bar = 0; this.renderBars(); this.drawChord(0); });
+    $('#jm-key', p).addEventListener('click', (e) => { const b = e.target.closest('.note-chip'); if (!b) return; this.key = +b.dataset.pc; $$('#jm-key .note-chip', p).forEach((x) => x.setAttribute('aria-pressed', x === b)); this.renderBars(); this.drawChord(this.bar); });
+    $('#jm-bpm', p).addEventListener('input', (e) => { this.bpm = +e.target.value; $('#jm-bpm-o', p).textContent = this.bpm + ' bpm'; });
+    wireSeg(p, 'jm-sc', (v) => { this.scaleMode = v; this.drawChord(this.bar); });
+    $$('[data-l]', p).forEach((b) => b.addEventListener('click', () => { const k = b.dataset.l; this.layers[k] = !this.layers[k]; b.setAttribute('aria-pressed', this.layers[k]); }));
+    $('#jm-play', p).addEventListener('click', () => (this.playing ? this.stop() : this.start()));
+    $('#jm-listen', p).addEventListener('click', () => this.toggleListen());
+    this.renderBars(); this.drawChord(0);
+  },
+  unmount() { this.stop(); if (Mic.active) Mic.stop(); this.listen = false; },
+  chordAt(i) { const st = JAM_STYLES[this.style]; const [d, id] = st.bars[i % st.bars.length]; return { root: mod(this.key + d, 12), id }; },
+  scaleIv() {
+    const st = JAM_STYLES[this.style];
+    const auto = st.scale;
+    if (this.scaleMode === 'none') return [];
+    if (this.scaleMode === 'full') return auto === 'majpent' ? MAJ : auto === 'blues' ? BLUES : [0, 2, 3, 5, 7, 8, 10];
+    if (this.scaleMode === 'pent') return auto === 'majpent' ? [0, 2, 4, 7, 9] : MINPENT;
+    return SCALES.find((x) => x.id === auto).iv;
+  },
+  renderBars() {
+    const st = JAM_STYLES[this.style];
+    $('#jm-bars', this.p).innerHTML = st.bars.map((_, i) => { const c = this.chordAt(i); return `<div class="prog-card${i === this.bar % st.bars.length ? ' on' : ''}"><small>${i + 1}</small><b style="color:${noteColor(c.root)}">${esc(noteName(c.root) + chordType(c.id).sym)}</b></div>`; }).join('');
+  },
+  drawChord(i) {
+    const c = this.chordAt(i), n = this.chordAt(i + 1), t = chordType(c.id);
+    const now = $('#jm-now', this.p), nx = $('#jm-next', this.p); if (!now) return;
+    now.textContent = noteName(c.root) + t.sym; now.style.color = noteColor(c.root);
+    nx.textContent = noteName(n.root) + chordType(n.id).sym;
+    $$('#jm-bars .prog-card', this.p).forEach((b, k) => b.classList.toggle('on', k === i % JAM_STYLES[this.style].bars.length));
+    Neck.clear();
+    const sIv = this.scaleIv(); const sPcs = sIv.map((x) => mod(this.key + x, 12)); const cPcs = t.iv.map((x) => mod(c.root + x, 12));
+    allCells().forEach(({ s, f, midi, pc }) => {
+      if (cPcs.includes(pc)) { const semi = mod(pc - c.root, 12); Neck.mark(s, f, { label: intervalInfo(semi, t.iv)[0], color: intervalColor(semi, t.iv), ring: semi === 0, ringColor: '#fff' }); }
+      else if (sPcs.includes(pc)) Neck.mark(s, f, { label: noteName(pc), color: 'rgba(241,233,218,.32)', textColor: '#f1e9da', cls: 'dim' });
+    });
+  },
+  start() {
+    const ctx = Sound.ensure(); if (!ctx) return;
+    this.playing = true; this.bar = 0; this.step = 0; this.next = ctx.currentTime + 0.12; this.inKey = { n: 0, ok: 0 };
+    $('#jm-play', this.p).innerHTML = `${ICONS.stop}Stop the band`;
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 25);
+  },
+  stop() {
+    this.playing = false; clearInterval(this.timer);
+    const b = this.p && $('#jm-play', this.p); if (b) b.innerHTML = `${ICONS.play}Start the band`;
+    Sound.stopAll();
+  },
+  tick() {
+    const ctx = Sound.ctx, st = JAM_STYLES[this.style];
+    const eighth = 30 / this.bpm;
+    while (this.next < ctx.currentTime + 0.15) {
+      const k = this.step % 8, bar = Math.floor(this.step / 8);
+      let t = this.next + (k % 2 === 1 ? eighth * (st.swing ? (st.swing * 2 - 1) : 0) : 0);
+      const c = this.chordAt(bar);
+      this.schedule(k, t, c, st, eighth, bar);
+      if (k === 0) { const delay = Math.max(0, (t - ctx.currentTime) * 1000); setTimeout(() => { if (!this.playing) return; this.bar = bar; this.drawChord(bar); }, delay); }
+      if (k % 2 === 0) { const delay = Math.max(0, (t - ctx.currentTime) * 1000); const beat = k / 2; setTimeout(() => { if (!this.playing) return; $$('#jm-beats i', this.p).forEach((d, j) => d.classList.toggle('on', j === beat)); }, delay); }
+      this.next += eighth; this.step++;
+    }
+  },
+  schedule(k, t, c, st, eighth, bar) {
+    const L = this.layers, beat = k / 2;
+    if (L.drums) {
+      if (this.style === 'minor') { if (k === 0) Sound.kick(t); if (k === 4) Sound.snare(t, 0.8); if (k % 2 === 0) Sound.hat(t, 0.6); }
+      else { if (k === 0 || k === 4 || (this.style === 'rock' && k === 5)) Sound.kick(t); if (k === 2 || k === 6) Sound.snare(t); Sound.hat(t, k % 2 ? 0.55 : 0.85, this.style === 'blues' && k === 7); }
+    }
+    const r = c.root, bassRoot = 33 + mod(r - 9, 12);
+    if (L.bass) {
+      if (this.style === 'blues') { const walk = [0, 4, 7, 9, 10, 9, 7, 4]; Sound.bass(bassRoot + walk[k], t, eighth * 0.95); }
+      else if (this.style === 'rock') Sound.bass(bassRoot, t, eighth * 0.9);
+      else if (this.style === 'pop') { if (k === 0 || k === 3 || k === 4 || k === 6) Sound.bass(bassRoot + (k === 6 ? 7 : 0), t, eighth * 1.6); }
+      else if (k === 0 || k === 4) Sound.bass(bassRoot + (k === 4 ? 7 : 0), t, eighth * 3.6);
+    }
+    if (L.chords) {
+      const v = this.voicing(c); if (!v) return;
+      const pat = this.style === 'pop' ? { 0: 'D', 2: 'D', 3: 'U', 5: 'U', 6: 'D', 7: 'U' } : this.style === 'rock' ? { 0: 'D', 2: 'D', 4: 'D', 6: 'D' } : this.style === 'blues' ? { 1: 'D', 5: 'D' } : { 0: 'D', 4: 'D' };
+      const dir = pat[k]; if (dir) Sound.strumAt(v.frets, t, dir === 'U', dir === 'U' ? 0.16 : 0.22);
+    }
+  },
+  vcache: {},
+  voicing(c) { const k = c.root + c.id; if (!this.vcache[k]) this.vcache[k] = voicingOf(c.root, c.id); return this.vcache[k]; },
+  async toggleListen() {
+    if (this.listen) { Mic.stop(); this.listen = false; $('#jm-listen', this.p).innerHTML = `${ICONS.mic}Show what I play`; $('#jm-score', this.p).textContent = ''; return; }
+    try { await Mic.start((f) => this.onPitch(f)); Mic.ignoreOwn = true; this.listen = true; this.inKey = { n: 0, ok: 0 }; $('#jm-listen', this.p).innerHTML = `${ICONS.stop}Stop listening`; } catch (e) { micError(e); }
+  },
+  onPitch(fr) {
+    if (fr <= 0) { this._st = 0; return; }
+    const m = Math.round(69 + 12 * Math.log2(fr / 440));
+    if (m === this._last) this._st++; else { this._st = 1; this._last = m; }
+    if (this._st !== 3) return;
+    const pc = m % 12, c = this.chordAt(this.bar), t = chordType(c.id);
+    const inChord = t.iv.map((x) => mod(c.root + x, 12)).includes(pc), inScale = this.scaleIv().map((x) => mod(this.key + x, 12)).includes(pc) || inChord;
+    this.inKey.n++; if (inScale) this.inKey.ok++;
+    const pos = allCells((x) => x === m); pos.forEach((p) => Neck.pluck(p.s, p.f, inChord ? '#5ee6a8' : inScale ? '#ffc857' : '#ff6b7a'));
+    $('#jm-score', this.p).innerHTML = `You played <b style="color:${noteColor(pc)}">${noteName(pc)}</b>: ${inChord ? 'a chord tone, perfect landing' : inScale ? 'in the scale' : 'outside the scale'}. ${Math.round(100 * this.inKey.ok / this.inKey.n)}% of your notes fit.`;
+  },
+  onCell(s, f) { Neck.play(s, f); },
+  onKey(e) { if (e.code === 'Space') { e.preventDefault(); this.playing ? this.stop() : this.start(); } },
+};
+
+/* ================= Tab player ================= */
+function tabFrom(cols, n = 6) {
+  // cols: array of arrays of [s, f]; null = bar line
+  const lines = Array.from({ length: n }, () => []);
+  cols.forEach((col) => {
+    if (col === null) { lines.forEach((l) => l.push('|')); return; }
+    const w = Math.max(...col.map(([, f]) => String(f).length), 1);
+    for (let i = 0; i < n; i++) { const s = n - 1 - i; const hit = col.find(([cs]) => cs === s); lines[i].push((hit ? String(hit[1]) : '').padEnd(w, '-') + '--'); }
+  });
+  const names = n === 6 ? ['e', 'B', 'G', 'D', 'A', 'E'] : ['G', 'D', 'A', 'E'];
+  return lines.map((l, i) => names[i] + '|--' + l.join('') + '|').join('\n');
+}
+function placeMelody(midis, pos) {
+  const tun = [40, 45, 50, 55, 59, 64]; let last = pos;
+  return midis.map((m) => {
+    let best = null;
+    tun.forEach((o, s) => { const f = m - o; if (f < 0 || f > 15) return; const cost = Math.abs(f - last) + (f < pos - 1 || f > pos + 4 ? 6 : 0); if (!best || cost < best.cost) best = { s, f, cost }; });
+    last = best.f; return [[best.s, best.f]];
+  });
+}
+const TAB_EXAMPLES = {
+  ode: { name: 'Ode to Joy (Beethoven)', bpm: 100, tab: () => tabFrom(placeMelody([64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62], 0)) },
+  green: { name: 'Greensleeves (traditional)', bpm: 110, tab: () => tabFrom(placeMelody([57, 60, 62, 64, 65, 64, 62, 59, 55, 57, 59, 60, 57, 57, 56, 57, 59, 56, 52], 2)) },
+  riff: { name: 'Pentatonic riff (exercise)', bpm: 120, tab: () => tabFrom([[[0, 5]], [[0, 8]], [[1, 5]], [[1, 7]], [[2, 5]], [[2, 7]], [[1, 7]], [[1, 5]], null, [[0, 8]], [[0, 5]], [[1, 7]], [[0, 5]]]) },
+  spider: { name: 'Spider walk (finger warm-up)', bpm: 90, tab: () => tabFrom([0, 1, 2, 3, 4, 5].flatMap((s) => [1, 2, 3, 4].map((f) => [[s, f]]))) },
+  chords: { name: 'G–C–D strummed', bpm: 80, tab: () => tabFrom([[[0, 3], [1, 2], [2, 0], [3, 0], [4, 0], [5, 3]], null, [[1, 3], [2, 2], [3, 0], [4, 1], [5, 0]], null, [[2, 0], [3, 2], [4, 3], [5, 2]], null, [[0, 3], [1, 2], [2, 0], [3, 0], [4, 0], [5, 3]]]) },
+};
+function parseTab(text) {
+  const raw = text.split(/\r?\n/);
+  const isTabLine = (l) => /^[\sA-Ga-g#b]*\|?[-0-9hpbr\/\\~x|().\s]*-[-0-9hpbr\/\\~x|().\s]*$/.test(l.trim()) && /-/.test(l);
+  const blocks = []; let cur = [];
+  raw.forEach((l) => { if (isTabLine(l)) cur.push(l); else { if (cur.length) blocks.push(cur); cur = []; } });
+  if (cur.length) blocks.push(cur);
+  const events = []; let lines = 6;
+  blocks.forEach((b) => {
+    const n = b.length >= 6 ? 6 : b.length; if (n < 4) return; lines = n;
+    const body = b.slice(0, n).map((l) => { const i = l.indexOf('|'); return i >= 0 && i < 4 ? l.slice(i + 1) : l.replace(/^\s*[A-Ga-g#b]\s*/, ''); });
+    const width = Math.max(...body.map((l) => l.length));
+    const byCol = new Map();
+    body.forEach((l, li) => {
+      for (let c = 0; c < l.length; c++) {
+        if (/\d/.test(l[c]) && !(c > 0 && /\d/.test(l[c - 1]))) {
+          let num = l[c]; if (/\d/.test(l[c + 1] || '') && +(l[c] + l[c + 1]) <= 24) num += l[c + 1];
+          const s = n - 1 - li; if (!byCol.has(c)) byCol.set(c, []); byCol.get(c).push({ s, f: +num, line: li, col: c, len: num.length });
+        }
+      }
+    });
+    const cols = [...byCol.keys()].sort((a, b) => a - b);
+    // merge columns 1 apart (two-digit numbers on other lines)
+    const merged = []; cols.forEach((c) => { const last = merged[merged.length - 1]; if (last && c - last.col <= 1) last.notes.push(...byCol.get(c)); else merged.push({ col: c, notes: byCol.get(c).slice() }); });
+    merged.forEach((m, i) => events.push({ notes: m.notes, gap: i ? m.col - merged[i - 1].col : 3, block: blocks.indexOf(b) }));
+    if (width) events.push({ notes: [], gap: 0, blockEnd: true });
+  });
+  return { events: events.filter((e) => e.notes.length), lines, blocks };
+}
+const Tabs = {
+  id: 'tabs', nav: 'Tab player', title: 'Tab player',
+  help: 'Paste any guitar tab, or pick an example. Fretwave plays it on the neck, at any speed, and shows the next note before you need it.',
+  example: 'ode', speed: 1, loop: true, timing: 'even', idx: -1, playing: false,
+  mount(p) {
+    this.p = p; this.idx = -1;
+    const ex = TAB_EXAMPLES[this.example];
+    p.innerHTML = `<div class="panel-grid">
+      <div class="controls">
+        <div class="tab-view" id="tb-view" aria-live="off"></div>
+        <div class="wrap">
+          <button class="btn btn-primary" id="tb-play">${ICONS.play}Play</button>
+          <button class="btn" id="tb-prev" aria-label="Previous note">◀ Step</button>
+          <button class="btn" id="tb-next" aria-label="Next note">Step ▶</button>
+          <button class="btn" id="tb-restart">${ICONS.replay}From the top</button>
+        </div>
+        <div class="row"><span class="lbl">Speed</span><div class="slider"><input type="range" min="0.25" max="1.5" step="0.05" value="${this.speed}" id="tb-speed" aria-label="Speed"><output id="tb-speed-o">${Math.round(this.speed * 100)}%</output></div></div>
+        <div class="row"><span class="lbl">Options</span><div class="wrap" style="gap:20px"><label class="switch"><input type="checkbox" id="tb-loop" ${this.loop ? 'checked' : ''}>Loop</label>${seg('tb-timing', [['even', 'Even timing'], ['space', 'Follow tab spacing']], this.timing)}</div></div>
+      </div>
+      <div class="controls">
+        <div class="row row-wide"><span class="lbl">Examples</span><div class="wrap" id="tb-ex">${Object.entries(TAB_EXAMPLES).map(([k, v]) => `<button class="chip" data-k="${k}" aria-pressed="${k === this.example}">${v.name}</button>`).join('')}</div></div>
+        <div class="row row-wide"><span class="lbl">Or paste your own tab</span><textarea id="tb-text" spellcheck="false" rows="8" aria-label="Tab text">${esc(this.text || ex.tab())}</textarea></div>
+        <div class="wrap"><button class="btn" id="tb-load">Load this tab</button><span class="muted" id="tb-msg" style="font-size:13px"></span></div>
+      </div></div>`;
+    $('#tb-play', p).addEventListener('click', () => (this.playing ? this.pause() : this.play()));
+    $('#tb-next', p).addEventListener('click', () => { this.pause(); this.goto(this.idx + 1, true); });
+    $('#tb-prev', p).addEventListener('click', () => { this.pause(); this.goto(this.idx - 1, true); });
+    $('#tb-restart', p).addEventListener('click', () => { this.pause(); this.goto(0, true); });
+    $('#tb-speed', p).addEventListener('input', (e) => { this.speed = +e.target.value; $('#tb-speed-o', p).textContent = Math.round(this.speed * 100) + '%'; });
+    $('#tb-loop', p).addEventListener('change', (e) => (this.loop = e.target.checked));
+    wireSeg(p, 'tb-timing', (v) => (this.timing = v));
+    $('#tb-ex', p).addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; this.example = b.dataset.k; $$('#tb-ex .chip', p).forEach((x) => x.setAttribute('aria-pressed', x === b)); this.text = TAB_EXAMPLES[this.example].tab(); $('#tb-text', p).value = this.text; this.load(); Metro.setBpm(TAB_EXAMPLES[this.example].bpm); });
+    $('#tb-load', p).addEventListener('click', () => { this.text = $('#tb-text', p).value; this.load(); });
+    this.text = $('#tb-text', p).value; this.load();
+  },
+  unmount() { this.pause(); },
+  load() {
+    this.pause();
+    const r = parseTab(this.text); this.ev = r.events; this.idx = -1;
+    const msg = $('#tb-msg', this.p);
+    if (!this.ev.length) { msg.textContent = 'No tab found. Paste lines that look like e|--0--3--|, one per string.'; $('#tb-view', this.p).innerHTML = ''; return; }
+    msg.textContent = `${this.ev.length} notes or chords loaded.${r.lines === 4 && S.settings.instrument !== 'bass' ? ' This looks like a 4-string tab: switch to bass in settings.' : ''}`;
+    this.renderView(r);
+    this.preview(0);
+  },
+  renderView(r) {
+    // rebuild the tab text with a span around each event's digits
+    const html = r.blocks.map((b, bi) => {
+      const n = b.length >= 6 ? 6 : b.length;
+      return b.slice(0, n).map((l, li) => {
+        const off = (() => { const i = l.indexOf('|'); return i >= 0 && i < 4 ? i + 1 : 0; })();
+        const marks = [];
+        this.ev.forEach((e, ei) => { if (e.block !== bi) return; e.notes.forEach((nt) => { if (nt.line === li) marks.push({ start: off + nt.col, len: nt.len, ei }); }); });
+        marks.sort((a, b2) => a.start - b2.start);
+        let out = '', pos = 0;
+        marks.forEach((m) => { out += esc(l.slice(pos, m.start)) + `<span data-e="${m.ei}">${esc(l.slice(m.start, m.start + m.len))}</span>`; pos = m.start + m.len; });
+        return out + esc(l.slice(pos));
+      }).join('\n');
+    }).join('\n\n');
+    $('#tb-view', this.p).innerHTML = `<pre>${html}</pre>`;
+  },
+  preview(i) {
+    Neck.clear();
+    const nx = this.ev[i]; if (!nx) return;
+    nx.notes.forEach((n) => { if (n.s < strings().length) Neck.mark(n.s, n.f, { label: n.f, color: 'rgba(241,233,218,.18)', textColor: '#f1e9da', cls: 'seqhint', ring: true, ringColor: 'rgba(241,233,218,.5)' }); });
+  },
+  goto(i, sound) {
+    if (!this.ev || !this.ev.length) return;
+    if (i >= this.ev.length) { if (this.loop) i = 0; else { this.pause(); return; } }
+    if (i < 0) i = 0;
+    this.idx = i; const e = this.ev[i];
+    Neck.clear();
+    e.notes.forEach((n, k) => { if (n.s >= strings().length || n.f > S.settings.frets) return; Neck.noteMark(n.s, n.f, { ring: true }); if (sound) Neck.play(n.s, n.f, k * 0.012, e.notes.length > 2 ? 0.3 : 0.5); });
+    const nx = this.ev[i + 1] || (this.loop ? this.ev[0] : null);
+    if (nx) nx.notes.forEach((n) => { if (n.s < strings().length && n.f <= S.settings.frets && !Neck.has(n.s, n.f)) Neck.mark(n.s, n.f, { label: n.f, color: 'rgba(241,233,218,.18)', textColor: '#f1e9da', cls: 'seqhint' }); });
+    $$('#tb-view span.on', this.p).forEach((x) => x.classList.remove('on'));
+    $$(`#tb-view span[data-e="${i}"]`, this.p).forEach((x) => { x.classList.add('on'); });
+    const first = $(`#tb-view span[data-e="${i}"]`, this.p); if (first) { const v = $('#tb-view', this.p); const r = first.getBoundingClientRect(), vr = v.getBoundingClientRect(); if (r.left < vr.left || r.right > vr.right) v.scrollLeft += r.left - vr.left - vr.width / 3; }
+    if (e.notes[0]) Neck.scrollTo(e.notes[0].f);
+  },
+  play() {
+    if (!this.ev || !this.ev.length) return; Sound.ensure();
+    this.playing = true; $('#tb-play', this.p).innerHTML = `${ICONS.stop}Pause`;
+    const stepFn = () => {
+      if (!this.playing) return;
+      this.goto(this.idx + 1, true);
+      if (!this.playing) return;
+      const nx = this.ev[this.idx + 1];
+      const beat = 60 / (Metro.bpm || 100) / this.speed;
+      const dt = this.timing === 'space' && nx ? clamp(nx.gap / 3, 0.25, 4) * beat * 0.5 : beat * 0.5;
+      this.t = setTimeout(stepFn, dt * 1000);
+    };
+    stepFn();
+  },
+  pause() { this.playing = false; clearTimeout(this.t); const b = this.p && $('#tb-play', this.p); if (b) b.innerHTML = `${ICONS.play}Play`; },
+  onCell(s, f) { Neck.play(s, f); },
+  onKey(e) { if (e.code === 'Space') { e.preventDefault(); this.playing ? this.pause() : this.play(); } else if (e.code === 'ArrowRight') { this.pause(); this.goto(this.idx + 1, true); } else if (e.code === 'ArrowLeft') { this.pause(); this.goto(this.idx - 1, true); } },
+};
+
+/* ================= Live view: see what you play ================= */
+const KS_MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
+const KS_MINOR = [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+function guessKey(hist) {
+  const tot = hist.reduce((a, b) => a + b, 0); if (tot < 8) return null;
+  let best = null;
+  const corr = (prof, r) => { const xm = hist.reduce((a, b) => a + b, 0) / 12, ym = prof.reduce((a, b) => a + b, 0) / 12; let n = 0, dx = 0, dy = 0; for (let i = 0; i < 12; i++) { const x = hist[mod(i + r, 12)] - xm, y = prof[i] - ym; n += x * y; dx += x * x; dy += y * y; } return n / Math.sqrt(dx * dy || 1); };
+  for (let r = 0; r < 12; r++) { [['major', KS_MAJOR], ['minor', KS_MINOR]].forEach(([q, prof]) => { const c = corr(prof, r); if (!best || c > best.c) best = { r, q, c }; }); }
+  return best;
+}
+const Live = {
+  id: 'live', nav: 'Live view', title: 'Live view',
+  help: 'Play anything on your guitar. Notes light up where they live on the neck, chords get named, and Fretwave works out which key you are playing in.',
+  on: false, trail: [], hist: new Array(12).fill(0),
+  mount(p) {
+    this.p = p; this.trail = []; this.hist = new Array(12).fill(0);
+    p.innerHTML = `<div class="panel-grid">
+      <div class="controls">
+        <div class="live-top">
+          <div class="big-note" id="lv-note" style="--c:#403b78">–</div>
+          <div><div class="facts" style="margin-top:0">
+            <div><b id="lv-hz">–</b><span>Pitch</span></div><div><b id="lv-chord">–</b><span>Chord heard</span></div><div><b id="lv-key">–</b><span>Key you seem to be in</span></div></div>
+            <div class="history" id="lv-hist" aria-label="Recent notes"></div></div>
+        </div>
+        <div class="wrap"><button class="btn btn-primary btn-big" id="lv-go">${ICONS.mic}Start listening</button><button class="btn" id="lv-clear">Clear</button></div>
+        <p class="muted" style="font-size:13.5px;margin:0">Tune with the Tuner first for the best results. Single notes are shown exactly; strummed chords are named from the blend of notes the mic hears.</p>
+      </div>
+      <div class="controls">
+        <div class="row"><span class="lbl">Show</span>${seg('lv-show', [['all', 'Every place it lives'], ['near', 'Most likely spot']], this.show || 'near')}</div>
+        <div class="row"><span class="lbl">Key overlay</span>${seg('lv-ov', [['auto', 'Detected key'], ['off', 'Off']], this.ov || 'auto')}</div>
+        <div class="chroma" id="lv-chroma">${Array.from({ length: 12 }, (_, pc) => `<div class="cb"><i style="--c:${noteColor(pc)}"></i><span>${noteName(pc)}</span></div>`).join('')}</div>
+      </div></div>`;
+    this.show = this.show || 'near'; this.ov = this.ov || 'auto';
+    wireSeg(p, 'lv-show', (v) => (this.show = v));
+    wireSeg(p, 'lv-ov', (v) => { this.ov = v; this.drawKey(); });
+    $('#lv-go', p).addEventListener('click', () => this.toggle());
+    $('#lv-clear', p).addEventListener('click', () => { this.trail = []; this.hist.fill(0); this.key = null; $('#lv-hist', p).innerHTML = ''; $('#lv-key', p).textContent = '–'; Neck.clear(); });
+  },
+  unmount() { if (Mic.active) Mic.stop(); this.on = false; },
+  async toggle() {
+    if (this.on) { Mic.stop(); this.on = false; $('#lv-go', this.p).innerHTML = `${ICONS.mic}Start listening`; return; }
+    try { await Mic.start((f, rms) => this.onPitch(f, rms)); Mic.chromaCb = (c) => this.onChroma(c); this.on = true; $('#lv-go', this.p).innerHTML = `${ICONS.stop}Stop listening`; } catch (e) { micError(e); }
+  },
+  onChroma(c) {
+    $$('#lv-chroma .cb i', this.p).forEach((b, pc) => (b.style.height = c ? Math.round(6 + c[pc] * 94) + '%' : '6%'));
+    if (!c) return;
+    const strong = c.filter((x) => x > 0.45).length;
+    if (strong >= 3) { const m = matchChord(c); if (m && m.score > 0.82) { const el = $('#lv-chord', this.p); el.textContent = noteName(m.root) + chordType(m.id).sym; el.style.color = noteColor(m.root); } }
+  },
+  onPitch(fr) {
+    if (fr <= 0) { this._st = 0; return; }
+    const mf = 69 + 12 * Math.log2(fr / 440), m = Math.round(mf);
+    if (m === this._last) this._st++; else { this._st = 1; this._last = m; }
+    if (this._st !== 2) return;
+    const pc = m % 12;
+    const n = $('#lv-note', this.p); n.textContent = noteName(pc); n.style.setProperty('--c', noteColor(pc));
+    $('#lv-hz', this.p).textContent = fr.toFixed(1) + ' Hz';
+    this.hist[pc] += 1;
+    const cands = allCells((x) => x === m); if (!cands.length) return;
+    const prev = this.trail[this.trail.length - 1];
+    const pick = prev ? cands.reduce((a, b) => (Math.abs(b.f - prev.f) + Math.abs(b.s - prev.s) * 0.5 < Math.abs(a.f - prev.f) + Math.abs(a.s - prev.s) * 0.5 ? b : a)) : cands.reduce((a, b) => (b.f < a.f ? b : a));
+    this.trail.push(pick); if (this.trail.length > 8) this.trail.shift();
+    const h = $('#lv-hist', this.p); h.insertAdjacentHTML('beforeend', `<span class="note-chip" style="--c:${noteColor(pc)}">${noteName(pc)}</span>`); while (h.children.length > 14) h.firstChild.remove();
+    const k = guessKey(this.hist); if (k && k.c > 0.55) { this.key = k; $('#lv-key', this.p).textContent = `${noteName(k.r)} ${k.q}`; }
+    this.drawKey();
+    if (this.show === 'all') cands.forEach((c) => Neck.noteMark(c.s, c.f, { ring: c === pick }));
+    this.trail.forEach((c, i) => { const age = this.trail.length - 1 - i; Neck.noteMark(c.s, c.f, { ring: age === 0, cls: age > 2 ? 'dim' : '' }); });
+    Neck.pluck(pick.s, pick.f);
+  },
+  drawKey() {
+    Neck.clear();
+    if (this.ov === 'auto' && this.key) { const iv = this.key.q === 'major' ? MAJ : [0, 2, 3, 5, 7, 8, 10]; const pcs = iv.map((x) => mod(this.key.r + x, 12)); allCells((m) => pcs.includes(m % 12)).forEach(({ s, f, pc }) => Neck.mark(s, f, { color: pc === this.key.r ? noteColor(pc) : 'rgba(241,233,218,.3)', cls: 'small dim', r: 17 })); }
+  },
+  onCell(s, f) { Neck.play(s, f); },
+};
+
+/* ================= Chord check + one-minute changes ================= */
+const Check = {
+  id: 'check', nav: 'Chord check', title: 'Chord check',
+  help: 'Strum a chord and Fretwave tells you if every note rang out, and which string to fix. Then race the clock with one-minute changes.',
+  root: 7, type: 'maj', mode: 'check', a: [7, 'maj'], b: [0, 'maj'],
+  mount(p) {
+    this.p = p; this.good = 0;
+    p.innerHTML = `<div class="panel-grid">
+      <div class="controls">
+        <div class="row"><span class="lbl">Mode</span>${seg('cc-mode', [['check', 'Check one chord'], ['changes', 'One-minute changes'], ['name', 'Name what I play']], this.mode)}</div>
+        <div id="cc-body" class="controls"></div>
+      </div>
+      <div class="controls">
+        <div class="chroma big" id="cc-chroma">${Array.from({ length: 12 }, (_, pc) => `<div class="cb"><i style="--c:${noteColor(pc)}"></i><span>${noteName(pc)}</span></div>`).join('')}</div>
+        <p class="muted" style="font-size:13.5px;margin:0">Bars show the notes the mic hears right now. Outlined bars are the notes the chord needs.</p>
+      </div></div>`;
+    wireSeg(p, 'cc-mode', (v) => { this.mode = v; this.stopAll(); this.renderBody(); });
+    this.renderBody();
+  },
+  unmount() { this.stopAll(); },
+  stopAll() { clearInterval(this.clock); this.running = false; if (Mic.active) Mic.stop(); },
+  pcs(r, id) { return [...new Set(chordType(id).iv.map((i) => mod(r + i, 12)))]; },
+  markWant(pcs) { $$('#cc-chroma .cb', this.p).forEach((b, pc) => b.classList.toggle('want', pcs.includes(pc))); },
+  draw(r, id) { const v = voicingOf(r, id); Neck.clear(); if (v) drawVoicing(v, r, chordType(id).iv, { stagger: true }); return v; },
+  chordPicker(id, val) { return `<div class="wrap">${seg(id + '-r', Array.from({ length: 12 }, (_, pc) => [pc, noteName(pc)]), val[0])}${seg(id + '-t', [['maj', 'Major'], ['min', 'Minor'], ['7', '7']], val[1])}</div>`; },
+  renderBody() {
+    const b = $('#cc-body', this.p);
+    if (this.mode === 'check') {
+      b.innerHTML = `<div class="row row-wide"><span class="lbl">Chord</span>${this.chordPicker('cc1', [this.root, this.type])}</div>
+        <div class="verdict" id="cc-v">Strum and let it ring.</div><p class="check-why" id="cc-msg"></p>
+        <div class="wrap"><button class="btn btn-primary btn-big" id="cc-go">${ICONS.mic}Listen</button><button class="btn" id="cc-hear">${ICONS.strum}Hear it</button></div>`;
+      const upd = () => { this.v = this.draw(this.root, this.type); this.markWant(this.pcs(this.root, this.type)); $('#cc-v', this.p).textContent = `Strum ${noteName(this.root)}${chordType(this.type).sym} and let it ring.`; $('#cc-v', this.p).className = 'verdict'; this.good = 0; };
+      wireSeg(b, 'cc1-r', (v) => { this.root = +v; upd(); }); wireSeg(b, 'cc1-t', (v) => { this.type = v; upd(); });
+      $('#cc-hear', b).addEventListener('click', () => this.v && strum(this.v.frets));
+      $('#cc-go', b).addEventListener('click', () => this.listen((c) => this.onCheck(c)));
+      upd();
+    } else if (this.mode === 'changes') {
+      b.innerHTML = `<div class="row row-wide"><span class="lbl">First chord</span>${this.chordPicker('cca', this.a)}</div>
+        <div class="row row-wide"><span class="lbl">Second chord</span>${this.chordPicker('ccb', this.b)}</div>
+        <div class="changes"><div><b id="cc-count">0</b><span>clean changes</span></div><div><b id="cc-time">60</b><span>seconds</span></div><div><b id="cc-best">${(S.settings.bestChanges || {})[this.pairKey()] || 0}</b><span>your best</span></div></div>
+        <div class="wrap"><button class="btn btn-primary btn-big" id="cc-start">${ICONS.play}Start 60 seconds</button><button class="btn" id="cc-tap">Count a change by hand</button></div>
+        <p class="muted" style="font-size:13.5px;margin:0">Switch back and forth between the two chords as many times as you can. The mic counts each clean change; or tap the button if it’s noisy.</p>`;
+      wireSeg(b, 'cca-r', (v) => { this.a[0] = +v; this.showPair(); }); wireSeg(b, 'cca-t', (v) => { this.a[1] = v; this.showPair(); });
+      wireSeg(b, 'ccb-r', (v) => { this.b[0] = +v; this.showPair(); }); wireSeg(b, 'ccb-t', (v) => { this.b[1] = v; this.showPair(); });
+      $('#cc-start', b).addEventListener('click', () => this.startChanges());
+      $('#cc-tap', b).addEventListener('click', () => this.countChange());
+      this.showPair();
+    } else {
+      b.innerHTML = `<div class="jam-chord" id="cc-name" style="font-size:96px">–</div><p class="muted" id="cc-conf"></p>
+        <div class="wrap"><button class="btn btn-primary btn-big" id="cc-go">${ICONS.mic}Listen</button></div>`;
+      this.markWant([]); Neck.clear();
+      $('#cc-go', b).addEventListener('click', () => this.listen((c) => this.onName(c)));
+    }
+  },
+  pairKey() { return this.a.join('') + '-' + this.b.join(''); },
+  showPair() {
+    Neck.clear(); const va = voicingOf(this.a[0], this.a[1]), vb = voicingOf(this.b[0], this.b[1]);
+    if (va) drawVoicing(va, this.a[0], chordType(this.a[1]).iv);
+    if (vb) vb.frets.forEach((f, s) => { if (f >= 0 && !Neck.has(s, f)) Neck.mark(s, f, { label: '2', color: 'rgba(241,233,218,.25)', textColor: '#f1e9da', cls: 'seqhint' }); });
+    this.markWant(this.pcs(...this.a));
+    const best = $('#cc-best', this.p); if (best) best.textContent = (S.settings.bestChanges || {})[this.pairKey()] || 0;
+  },
+  async listen(fn) {
+    const btn = $('#cc-go', this.p);
+    if (Mic.active) { Mic.stop(); if (btn) btn.innerHTML = `${ICONS.mic}Listen`; return; }
+    try { await Mic.start(() => {}); Mic.chromaCb = (c) => { this.bars(c); fn(c); }; if (btn) btn.innerHTML = `${ICONS.stop}Stop`; } catch (e) { micError(e); }
+  },
+  bars(c) { $$('#cc-chroma .cb i', this.p).forEach((b, pc) => (b.style.height = c ? Math.round(6 + c[pc] * 94) + '%' : '6%')); },
+  onCheck(c) {
+    if (!c) return;
+    const pcs = this.pcs(this.root, this.type), r = checkChord(c, pcs), v = $('#cc-v', this.p), msg = $('#cc-msg', this.p);
+    if (r.ok) { this.good++; if (this.good === 4) { v.textContent = 'Clean! Every note rang.'; v.className = 'verdict good'; msg.textContent = ''; Sound.play(84, 0, 0.2); } }
+    else {
+      this.good = 0;
+      if (r.missing.length && this.v) {
+        const strs = this.v.frets.map((f, s) => ({ f, s })).filter((x) => x.f >= 0 && r.missing.includes(midiAt(x.s, x.f) % 12));
+        v.textContent = `Missing ${r.missing.map(noteName).join(', ')}`; v.className = 'verdict bad';
+        msg.textContent = strs.length ? `Check the ${strs.map((x) => ordinal(stringNumber(x.s))).join(' and ')} string: press right behind the fret and keep other fingers off it.` : '';
+        strs.forEach((x) => Neck.pluck(x.s, x.f, '#ff6b7a'));
+      } else if (r.extra.length) { v.textContent = `Extra note: ${r.extra.map(noteName).join(', ')}. Mute strings marked ×.`; v.className = 'verdict bad'; }
+    }
+  },
+  onName(c) {
+    if (!c) return; const m = matchChord(c); if (!m || m.score < 0.8) return;
+    const el = $('#cc-name', this.p); el.textContent = noteName(m.root) + chordType(m.id).sym; el.style.color = noteColor(m.root);
+    $('#cc-conf', this.p).textContent = `${chordType(m.id).name}, ${Math.round(m.score * 100)}% match`;
+    this.markWant(this.pcs(m.root, m.id));
+  },
+  async startChanges() {
+    if (this.running) { this.endChanges(); return; }
+    this.count = 0; this.left = 60; this.side = 'a'; this.running = true; this.good = 0;
+    $('#cc-count', this.p).textContent = 0; $('#cc-start', this.p).innerHTML = `${ICONS.stop}Stop`;
+    try { await Mic.start(() => {}); Mic.chromaCb = (c) => { this.bars(c); this.onChange(c); }; } catch (e) { /* manual counting still works */ }
+    this.clock = setInterval(() => { this.left--; $('#cc-time', this.p).textContent = this.left; if (this.left <= 0) this.endChanges(); }, 1000);
+  },
+  onChange(c) {
+    if (!c || !this.running) return;
+    const want = this.side === 'a' ? this.b : this.a; // waiting for the other chord
+    const r = checkChord(c, this.pcs(want[0], want[1]));
+    if (r.ok) { this.good++; if (this.good >= 3) { this.good = 0; this.countChange(); } } else this.good = 0;
+  },
+  countChange() {
+    if (!this.running) { toast('Press Start first.'); return; }
+    this.count++; this.side = this.side === 'a' ? 'b' : 'a'; $('#cc-count', this.p).textContent = this.count;
+    this.markWant(this.side === 'a' ? this.pcs(...this.b) : this.pcs(...this.a));
+  },
+  endChanges() {
+    clearInterval(this.clock); this.running = false; if (Mic.active) Mic.stop();
+    const k = this.pairKey(); S.settings.bestChanges = S.settings.bestChanges || {};
+    const prev = S.settings.bestChanges[k] || 0;
+    if (this.count > prev) { S.settings.bestChanges[k] = this.count; persist(); toast(`New best: ${this.count} changes!`); }
+    $('#cc-best', this.p).textContent = S.settings.bestChanges[k] || 0;
+    $('#cc-start', this.p).innerHTML = `${ICONS.play}Start 60 seconds`;
+  },
+  onCell(s, f) { Neck.play(s, f); },
+};
+
+/* ================= Icons used by the newer screens ================= */
+Object.assign(ICONS, {
+  close: ic('<path d="M6 6l12 12M18 6L6 18"/>'),
+  check: ic('<path d="M4.5 12.5l5 5L19.5 7"/>'),
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.1l-5.7 3.2 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>',
+  book: ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/>'),
+  jam: ic('<path d="M3 12h2l2-6 3 12 3-9 2 5 2-2h4"/>'),
+  learn: ic('<path d="M5 20c0-4 3-4 3-8s-3-4-3-8"/><circle cx="5" cy="4" r="1.6" fill="currentColor"/><circle cx="8" cy="12" r="1.6" fill="currentColor"/><circle cx="5" cy="20" r="1.6" fill="currentColor"/><path d="M12 6h8M12 12h8M12 18h8"/>'),
+  tools: ic('<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L3.5 17.5l3 3 5.7-5.7a4 4 0 0 0 5.3-5.3l-2.6 2.6-2.4-.6-.6-2.4z"/>'),
+  download: ic('<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>'),
+  sync: ic('<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>'),
+  bell: ic('<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'),
+  copy: ic('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'),
+});
+Voice.sayLong = function (text) {
+  if (!('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.volume = 0.9; speechSynthesis.speak(u); } catch (e) { /* no speech */ }
+};
+
+/* ================= Progress transfer + merge ================= */
+function snapshot() { return { v: 1, stats: S.stats, daily: S.daily, learn: S.learn, best: S.settings.bestChanges || {} }; }
+function mergeIn(o) {
+  if (!o || typeof o !== 'object') return false;
+  for (const k in o.stats || {}) { const a = S.stats[k], b = o.stats[k]; if (!a || (b && b.n > a.n)) S.stats[k] = b; }
+  if (o.learn && o.learn.done) for (const id in o.learn.done) S.learn.done[id] = Math.max(S.learn.done[id] || 0, o.learn.done[id]);
+  if (o.daily) {
+    const a = S.daily, b = o.daily;
+    if (b.date === a.date) a.count = Math.max(a.count || 0, b.count || 0); else if ((b.date || '') > (a.date || '')) { a.date = b.date; a.count = b.count; }
+    if ((b.last || '') > (a.last || '')) { a.last = b.last; a.streak = b.streak; } else if (b.last === a.last) a.streak = Math.max(a.streak || 0, b.streak || 0);
+  }
+  if (o.best) { S.settings.bestChanges = S.settings.bestChanges || {}; for (const k in o.best) S.settings.bestChanges[k] = Math.max(S.settings.bestChanges[k] || 0, o.best[k]); }
+  return true;
+}
+const b64e = (str) => btoa(unescape(encodeURIComponent(str)));
+const b64d = (str) => decodeURIComponent(escape(atob(str.trim())));
+
+/* ================= Google sign-in sync (Firebase, optional) ================= */
+const Sync = {
+  user: null, ready: false, t: null, status: '',
+  cfg() { return window.FRETWAVE_FIREBASE || null; },
+  async init() {
+    const cfg = this.cfg(); if (!cfg || this.fb) return;
+    try {
+      const v = '10.12.2', base = `https://www.gstatic.com/firebasejs/${v}/`;
+      const [appM, authM, fsM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+      const app = appM.initializeApp(cfg);
+      this.fb = { authM, fsM, auth: authM.getAuth(app), db: fsM.getFirestore(app) };
+      authM.onAuthStateChanged(this.fb.auth, async (u) => { this.user = u; if (u) await this.pull(); renderSyncStatus(); });
+      this.ready = true;
+    } catch (e) { this.status = 'Sync could not load. Check your Firebase settings.'; renderSyncStatus(); }
+  },
+  async signIn() {
+    if (!this.cfg()) { toast('Sign-in needs a Firebase project. See the README to switch it on.', 4000); return; }
+    await this.init(); if (!this.fb) return;
+    try { await this.fb.authM.signInWithPopup(this.fb.auth, new this.fb.authM.GoogleAuthProvider()); } catch (e) { toast('Sign-in was cancelled or blocked by the browser.'); }
+  },
+  async signOut() { if (this.fb) await this.fb.authM.signOut(this.fb.auth); this.user = null; renderSyncStatus(); },
+  ref() { const { fsM, db } = this.fb; return fsM.doc(db, 'users', this.user.uid); },
+  async pull() {
+    try { const d = await this.fb.fsM.getDoc(this.ref()); if (d.exists()) { mergeIn(JSON.parse(d.data().state)); store.save({ settings: S.settings, stats: S.stats, daily: S.daily, learn: S.learn }); renderDaily(); if (current && current.id !== 'path') remount(); else if (current) Path.show(); } await this.push(); this.status = 'Synced just now'; } catch (e) { this.status = 'Could not reach the sync server.'; }
+    renderSyncStatus();
+  },
+  async push() { if (!this.user || !this.fb) return; await this.fb.fsM.setDoc(this.ref(), { state: JSON.stringify(snapshot()), updated: Date.now() }); this.status = 'Synced'; renderSyncStatus(); },
+  queue() { if (!this.user) return; clearTimeout(this.t); this.t = setTimeout(() => this.push().catch(() => { this.status = 'Offline: will sync later'; renderSyncStatus(); }), 2500); },
+};
+function renderSyncStatus() {
+  const el = $('#sync-status'); if (!el) return;
+  if (Sync.user) el.innerHTML = `Signed in as <b>${esc(Sync.user.displayName || Sync.user.email || 'you')}</b>. ${esc(Sync.status)} <button class="btn" id="sy-out">Sign out</button>`;
+  else el.innerHTML = Sync.cfg() ? `<button class="btn btn-primary" id="sy-in">${ICONS.sync}Sign in with Google to sync</button> <span class="muted">${esc(Sync.status)}</span>` : '<span class="muted">Google sign-in is ready to switch on: add a free Firebase project (steps in the README). Until then, use a progress code below.</span>';
+  const i = $('#sy-in'); if (i) i.addEventListener('click', () => Sync.signIn());
+  const o = $('#sy-out'); if (o) o.addEventListener('click', () => Sync.signOut());
+}
+
+/* ================= Installable app + reminders ================= */
+const AppShell = {
+  deferred: null,
+  init() {
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.deferred = e; const b = $('#ap-install'); if (b) b.disabled = false; });
+    try {
+      if ('serviceWorker' in navigator && /^https:|^http:\/\/localhost/.test(location.href) && window.top === window.self) {
+        navigator.serviceWorker.register('sw.js').then((reg) => { this.reg = reg; }).catch(() => {});
+      }
+    } catch (e) { /* sandboxed preview */ }
+    setInterval(() => this.maybeRemind(), 60000); setTimeout(() => this.maybeRemind(), 4000);
+  },
+  installed() { return window.matchMedia && matchMedia('(display-mode: standalone)').matches; },
+  async install() {
+    if (this.deferred) { this.deferred.prompt(); await this.deferred.userChoice; this.deferred = null; return; }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    toast(ios ? 'On iPhone: tap Share, then “Add to Home Screen”.' : 'Use your browser menu: “Install app” or “Add to Home screen”.', 5000);
+  },
+  async enableReminder(on) {
+    S.settings.reminder = on ? (S.settings.reminder || '19:00') : null; persist();
+    if (!on) return;
+    if ('Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (e) { /* ignore */ } }
+    try { const reg = this.reg || (navigator.serviceWorker && await navigator.serviceWorker.ready); if (reg && reg.periodicSync) await reg.periodicSync.register('fretwave-reminder', { minInterval: 12 * 3600 * 1000 }); } catch (e) { /* not supported: falls back to in-app and calendar reminders */ }
+  },
+  maybeRemind() {
+    const r = S.settings.reminder; if (!r || S.daily.last === today()) return;
+    const [h, m] = r.split(':').map(Number); const now = new Date();
+    if (now.getHours() * 60 + now.getMinutes() < h * 60 + m || S.settings.remindedOn === today()) return;
+    S.settings.remindedOn = today(); persist();
+    const st = currentStreak();
+    const body = st ? `Keep your ${st}-day streak going: one quick lesson does it.` : 'Five minutes on the fretboard today?';
+    try { if ('Notification' in window && Notification.permission === 'granted') { if (this.reg) this.reg.showNotification('Fretwave', { body, icon: 'icons/icon-192.png', tag: 'fretwave-daily' }); else new Notification('Fretwave', { body }); return; } } catch (e) { /* fall through */ }
+    toast(body, 5000);
+  },
+  calendarFile() {
+    const [h, m] = (S.settings.reminder || '19:00').split(':');
+    const d = new Date(); const ds = dateStr(d).replace(/-/g, '');
+    const url = location.href.split('#')[0];
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Fretwave//EN', 'BEGIN:VEVENT', `UID:fretwave-daily-${Date.now()}@fretwave`, `DTSTAMP:${ds}T000000Z`, `DTSTART:${ds}T${h}${m}00`, 'DURATION:PT10M', 'RRULE:FREQ=DAILY', 'SUMMARY:Guitar practice (Fretwave)', `DESCRIPTION:Ten minutes on the fretboard. Open ${url}`, `URL:${url}`, 'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Time to practice', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = 'fretwave-practice.ics'; document.body.appendChild(a); a.click(); a.remove();
+  },
+};
+
+/* ================= Settings dialog (tabs keep it short) ================= */
+let settingsTab = 'instrument';
+function openSettings(tab) {
+  if (tab) settingsTab = tab;
   const st = S.settings, body = $('#settings-body');
-  body.innerHTML = `
+  const tabs = seg('st-tabs', [['instrument', 'Instrument'], ['sound', 'Sound and goals'], ['sync', 'Sync and app']], settingsTab);
+  let html = '';
+  if (settingsTab === 'instrument') html = `
     <div class="row"><span class="lbl">Instrument</span>${seg('st-inst', Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]), st.instrument)}</div>
     <div class="row"><span class="lbl">Tuning</span><select id="st-tun" aria-label="Tuning">${Object.entries(inst().tunings).map(([k, v]) => `<option value="${k}" ${k === st.tuning ? 'selected' : ''}>${v.name}</option>`).join('')}</select></div>
     <div class="row"><span class="lbl">Frets shown</span>${seg('st-frets', [['12', '12'], ['15', '15'], ['19', '19'], ['22', '22'], ['24', '24']], st.frets)}</div>
     <div class="row"><span class="lbl">Accidentals</span>${seg('st-acc', [['sharp', 'Sharps (C♯)'], ['flat', 'Flats (D♭)']], st.accidentals)}</div>
     <div class="row"><span class="lbl">Hand</span>${seg('st-hand', [['0', 'Right-handed'], ['1', 'Left-handed']], st.lefty ? '1' : '0')}</div>
+    <p class="muted" style="font-size:13px;margin:0">Lessons always use a standard-tuned guitar; everything else follows these settings.</p>`;
+  else if (settingsTab === 'sound') html = `
     <div class="row"><span class="lbl">Volume</span><div class="slider"><input type="range" min="0" max="1" step="0.05" value="${st.volume}" id="st-vol" aria-label="Volume"><output id="st-vol-o">${Math.round(st.volume * 100)}%</output></div></div>
-    <div class="row"><span class="lbl">Daily goal</span>${seg('st-goal', [['20', '20 notes'], ['40', '40 notes'], ['80', '80 notes'], ['150', '150 notes']], st.goal)}</div>
-    <div class="row"><span class="lbl">Voice</span><label class="switch"><input type="checkbox" id="st-speak" ${st.speak ? 'checked' : ''}>Say note names aloud</label></div>`;
+    <div class="row"><span class="lbl">Voice</span><div class="wrap" style="gap:18px"><label class="switch"><input type="checkbox" id="st-speak" ${st.speak ? 'checked' : ''}>Say note names aloud</label><label class="switch"><input type="checkbox" id="st-narr" ${st.narrate !== false ? 'checked' : ''}>Read lessons aloud</label></div></div>
+    <div class="row"><span class="lbl">Daily goal</span>${seg('st-goal', [['20', '20 notes'], ['40', '40 notes'], ['80', '80 notes'], ['150', '150 notes']], st.goal)}</div>`;
+  else html = `
+    <div class="row row-wide"><span class="lbl">Sync across devices</span><div id="sync-status"></div></div>
+    <div class="row row-wide"><span class="lbl">Progress code (works without an account)</span>
+      <div class="wrap"><button class="btn" id="st-copy">${ICONS.copy}Copy my progress code</button><span class="muted" style="font-size:13px">Paste it on your other device below.</span></div>
+      <textarea id="st-code" rows="2" placeholder="Paste a progress code here" aria-label="Progress code"></textarea>
+      <div class="wrap"><button class="btn" id="st-import">Add this progress</button></div></div>
+    <div class="row row-wide"><span class="lbl">Install as an app</span><div class="wrap"><button class="btn btn-primary" id="ap-install" ${AppShell.installed() ? 'disabled' : ''}>${ICONS.download}${AppShell.installed() ? 'Installed' : 'Install Fretwave'}</button><span class="muted" style="font-size:13px">Works offline once installed.</span></div></div>
+    <div class="row row-wide"><span class="lbl">Daily reminder</span><div class="wrap" style="gap:14px"><label class="switch"><input type="checkbox" id="st-rem" ${st.reminder ? 'checked' : ''}>Remind me at</label><input type="time" id="st-remt" value="${st.reminder || '19:00'}" aria-label="Reminder time"><button class="btn" id="st-ics">${ICONS.bell}Add to my calendar instead</button></div>
+      <p class="muted" style="font-size:13px;margin:0">Notifications work best with the app installed (Chrome, Edge and Android). The calendar option works on every phone, including iPhone.</p></div>`;
+  body.innerHTML = `<div>${tabs}</div>${html}`;
+  wireSeg(body, 'st-tabs', (v) => openSettings(v));
   const rebuild = () => { persist(); Neck.build(); remount(); };
-  wireSeg(body, 'st-inst', (v) => {
-    st.instrument = v; st.tuning = Object.keys(INSTRUMENTS[v].tunings)[0]; st.drill.strings = null; Sound.cache.clear();
-    $('#st-tun').innerHTML = Object.entries(inst().tunings).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join('');
-    rebuild();
-  });
-  $('#st-tun').addEventListener('change', (e) => { st.tuning = e.target.value; rebuild(); });
-  wireSeg(body, 'st-frets', (v) => { st.frets = +v; rebuild(); });
-  wireSeg(body, 'st-acc', (v) => { st.accidentals = v; rebuild(); });
-  wireSeg(body, 'st-hand', (v) => { st.lefty = v === '1'; rebuild(); });
-  wireSeg(body, 'st-goal', (v) => { st.goal = +v; persist(); renderDaily(); });
-  $('#st-vol').addEventListener('input', (e) => { st.volume = +e.target.value; $('#st-vol-o').textContent = Math.round(st.volume * 100) + '%'; Sound.setVolume(st.volume); persist(); });
-  $('#st-vol').addEventListener('change', () => Sound.play(57));
-  $('#st-speak').addEventListener('change', (e) => { st.speak = e.target.checked; persist(); syncTopButtons(); });
-  $('#settings').showModal();
+  if (settingsTab === 'instrument') {
+    wireSeg(body, 'st-inst', (v) => { st.instrument = v; st.tuning = Object.keys(INSTRUMENTS[v].tunings)[0]; st.drill.strings = null; Sound.cache.clear(); $('#st-tun').innerHTML = Object.entries(inst().tunings).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join(''); rebuild(); });
+    $('#st-tun').addEventListener('change', (e) => { st.tuning = e.target.value; rebuild(); });
+    wireSeg(body, 'st-frets', (v) => { st.frets = +v; rebuild(); });
+    wireSeg(body, 'st-acc', (v) => { st.accidentals = v; rebuild(); });
+    wireSeg(body, 'st-hand', (v) => { st.lefty = v === '1'; rebuild(); });
+  } else if (settingsTab === 'sound') {
+    $('#st-vol').addEventListener('input', (e) => { st.volume = +e.target.value; $('#st-vol-o').textContent = Math.round(st.volume * 100) + '%'; Sound.setVolume(st.volume); persist(); });
+    $('#st-vol').addEventListener('change', () => Sound.play(57));
+    $('#st-speak').addEventListener('change', (e) => { st.speak = e.target.checked; persist(); syncTopButtons(); });
+    $('#st-narr').addEventListener('change', (e) => { st.narrate = e.target.checked; persist(); });
+    wireSeg(body, 'st-goal', (v) => { st.goal = +v; persist(); renderDaily(); });
+  } else {
+    renderSyncStatus();
+    $('#st-copy').addEventListener('click', async () => { const code = b64e(JSON.stringify(snapshot())); try { await navigator.clipboard.writeText(code); toast('Progress code copied.'); } catch (e) { $('#st-code').value = code; $('#st-code').select(); toast('Copy the code from the box.'); } });
+    $('#st-import').addEventListener('click', () => { try { const o = JSON.parse(b64d($('#st-code').value)); if (mergeIn(o)) { persist(); renderDaily(); toast('Progress added. Nothing was overwritten: the best of both is kept.'); $('#st-code').value = ''; } } catch (e) { toast('That code didn’t work. Copy the whole thing and try again.'); } });
+    $('#ap-install').addEventListener('click', () => AppShell.install());
+    $('#st-rem').addEventListener('change', (e) => AppShell.enableReminder(e.target.checked));
+    $('#st-remt').addEventListener('change', (e) => { st.reminder = e.target.value; $('#st-rem').checked = true; persist(); AppShell.enableReminder(true); });
+    $('#st-ics').addEventListener('click', () => { if (!st.reminder) st.reminder = $('#st-remt').value; AppShell.calendarFile(); });
+  }
+  if (!$('#settings').open) $('#settings').showModal();
 }
 
-/* ================= App shell ================= */
-const MODES = [Explore, Find, NameIt, Chords, Scales, Ear, Tuner, Progress];
+/* ================= App shell: four sections, each with a few sub-pages ================= */
+const GROUPS = [
+  { id: 'learn', name: 'Learn', icon: 'learn', modes: ['path', 'theory', 'progress'], hint: 'Lessons and your roadmap' },
+  { id: 'practice', name: 'Practice', icon: 'find', modes: ['find', 'name', 'ear'], hint: 'Quick drills' },
+  { id: 'play', name: 'Play', icon: 'jam', modes: ['jam', 'tabs', 'live', 'check'], hint: 'Play your real guitar' },
+  { id: 'tools', name: 'Tools', icon: 'tools', modes: ['explore', 'chords', 'scales', 'tuner'], hint: 'Reference and tuner' },
+];
+const MODES = [Path, Theory, Progress, Find, NameIt, Ear, Jam, Tabs, Live, Check, Explore, Chords, Scales, Tuner];
+const SUB_LABELS = { path: 'Path', theory: 'Theory notes', progress: 'Progress', find: 'Find it', name: 'Name it', ear: 'Ear training', jam: 'Jam room', tabs: 'Tab player', live: 'Live view', check: 'Chord check', explore: 'Neck', chords: 'Chords', scales: 'Scales', tuner: 'Tuner' };
 let current = null;
+const groupOf = (id) => GROUPS.find((g) => g.modes.includes(id)) || GROUPS[0];
+function setStage(on) { $('#stage').hidden = !on; }
 function setMode(id) {
-  const m = MODES.find((x) => x.id === id) || Explore;
+  const m = MODES.find((x) => x.id === id) || Path;
   if (current && current.unmount) current.unmount();
-  Sound.stopAll(); Neck.cancelPending();
-  current = m; S.mode = m.id; S.settings.lastMode = m.id; persist();
-  $$('#nav .nav-btn').forEach((b) => b.setAttribute('aria-current', b.dataset.m === m.id ? 'page' : 'false'));
+  Sound.stopAll(); Neck.cancelPending(); Checks.stop();
+  current = m; S.mode = m.id; S.settings.lastMode = m.id;
+  const g = groupOf(m.id); S.settings.lastIn = S.settings.lastIn || {}; S.settings.lastIn[g.id] = m.id; persist();
+  $$('#nav .nav-btn').forEach((b) => b.setAttribute('aria-current', b.dataset.g === g.id ? 'page' : 'false'));
+  $('#subtabs').innerHTML = g.modes.map((mid) => `<button type="button" role="tab" class="subtab" data-m="${mid}" aria-selected="${mid === m.id}">${SUB_LABELS[mid]}</button>`).join('');
   $('#mode-title').textContent = m.title; $('#mode-help').textContent = m.help;
   $('#hud').innerHTML = '';
+  setStage(!m.noNeck);
   Neck.clear(); Neck.onCell = (s, f, e) => (m.onCell ? m.onCell(s, f, e) : Neck.play(s, f));
   m.mount($('#panel'));
-  document.title = `${m.title}: Fretwave`;
+  document.title = `${SUB_LABELS[m.id]}: Fretwave`;
+  window.scrollTo({ top: 0 });
 }
 function remount() { setMode(S.mode); }
 function renderDaily() {
@@ -2006,18 +3974,22 @@ function renderDaily() {
   $('#daily').title = `${count} of ${goal} notes practiced today`;
   const st = currentStreak();
   $('#streak').innerHTML = st ? `${ICONS.flame}${st} day${st === 1 ? '' : 's'}` : '<span class="muted" style="font-size:11px">No streak yet</span>';
+  const lv = $('#rail-level');
+  if (lv) { const li = currentLevelIndex(); const pr = levelProgress(CURRICULUM[li]); lv.innerHTML = `<small>Level ${li + 1}</small><span class="rl-bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span>`; lv.title = `Level ${li + 1}: ${CURRICULUM[li].title}, ${pr.done} of ${pr.total} lessons`; }
 }
 function syncTopButtons() {
   $('#btn-sound').setAttribute('aria-pressed', S.settings.sound);
   $('#btn-voice').setAttribute('aria-pressed', S.settings.speak);
 }
 function init() {
-  $('#nav').innerHTML = MODES.map((m) => `<button type="button" class="nav-btn" data-m="${m.id}">${ICONS[m.id === 'name' ? 'name' : m.id]}<span>${m.nav}</span></button>`).join('');
-  $('#nav').addEventListener('click', (e) => { const b = e.target.closest('.nav-btn'); if (b) setMode(b.dataset.m); });
+  $('#nav').innerHTML = GROUPS.map((g) => `<button type="button" class="nav-btn" data-g="${g.id}" title="${g.hint}">${ICONS[g.icon]}<span>${g.name}</span></button>`).join('');
+  $('#nav').addEventListener('click', (e) => { const b = e.target.closest('.nav-btn'); if (!b) return; const g = GROUPS.find((x) => x.id === b.dataset.g); setMode((S.settings.lastIn || {})[g.id] || g.modes[0]); });
+  $('#subtabs').addEventListener('click', (e) => { const b = e.target.closest('.subtab'); if (b) setMode(b.dataset.m); });
+  $('#rail-level').addEventListener('click', () => setMode('path'));
   $('#btn-sound').innerHTML = ICONS.sound; $('#btn-voice').innerHTML = ICONS.voice; $('#btn-settings').innerHTML = ICONS.settings;
-  $('#btn-sound').addEventListener('click', () => { S.settings.sound = !S.settings.sound; persist(); syncTopButtons(); if (S.settings.sound) Sound.play(57); else Sound.stopAll(); toast(S.settings.sound ? 'Sound on' : 'Sound off', 1000); });
+  $('#btn-sound').addEventListener('click', () => { S.settings.sound = !S.settings.sound; persist(); syncTopButtons(); if (S.settings.sound) Sound.play(57); else { Sound.stopAll(); Metro.stop(); } toast(S.settings.sound ? 'Sound on' : 'Sound off', 1000); });
   $('#btn-voice').addEventListener('click', () => { S.settings.speak = !S.settings.speak; persist(); syncTopButtons(); if (S.settings.speak) Voice.say('Note names on'); toast(S.settings.speak ? 'Note names will be spoken' : 'Spoken note names off', 1200); });
-  $('#btn-settings').addEventListener('click', openSettings);
+  $('#btn-settings').addEventListener('click', () => openSettings());
   $('#settings-done').addEventListener('click', () => $('#settings').close());
   document.addEventListener('keydown', (e) => {
     if ($('#settings').open || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2026,9 +3998,13 @@ function init() {
     if (current && current.onKey) current.onKey(e);
   });
   document.addEventListener('pointerdown', () => Sound.ensure(), { once: true });
-  syncTopButtons(); renderDaily();
+  syncTopButtons(); initMetro();
   Neck.init($('#neck'));
-  setMode(S.settings.lastMode || 'explore');
+  renderDaily();
+  AppShell.init();
+  if (Sync.cfg()) Sync.init();
+  const first = S.settings.lastMode && MODES.some((m) => m.id === S.settings.lastMode) ? S.settings.lastMode : 'path';
+  setMode(first);
 }
 init();
 </script>
