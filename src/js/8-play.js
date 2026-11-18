@@ -41,11 +41,27 @@ Neck.caged = function (root, o = {}) {
 };
 
 /* ================= Jam room ================= */
+/* Patterns run on a 16-step grid (sixteenth notes). x = hit, g = ghost, o = open hat.
+   bass: [step, semitones above chord root, length in steps]; strum: step -> D(own) U(p) S(hort stab) M(uted chug) */
 const JAM_STYLES = {
-  pop: { name: 'Pop', feel: 'I–V–vi–IV', bars: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj']], scale: 'majpent', swing: 0, bpm: 96 },
-  rock: { name: 'Rock', feel: 'I–IV–V–IV', bars: [[0, 'maj'], [5, 'maj'], [7, 'maj'], [5, 'maj']], scale: 'majpent', swing: 0, bpm: 118 },
-  blues: { name: '12-bar blues', feel: 'I7–IV7–V7', bars: [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7].map((x) => [x, '7']), scale: 'blues', swing: 0.62, bpm: 92 },
-  minor: { name: 'Minor ballad', feel: 'i–VI–III–VII', bars: [[0, 'min'], [8, 'maj'], [3, 'maj'], [10, 'maj']], scale: 'minpent', swing: 0, bpm: 76 },
+  pop: { name: 'Pop', bars: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj']], scale: 'majpent', bpm: 96,
+    kick: 'x.......x.x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', bass: [[0, 0, 6], [6, 0, 2], [8, 0, 4], [12, 7, 4]], strum: { 0: 'D', 4: 'D', 6: 'U', 10: 'U', 12: 'D', 14: 'U' } },
+  rock: { name: 'Rock', bars: [[0, 'maj'], [5, 'maj'], [7, 'maj'], [5, 'maj']], scale: 'majpent', bpm: 118,
+    kick: 'x.......xx......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', bass: [0, 2, 4, 6, 8, 10, 12, 14].map((k) => [k, 0, 2]), strum: { 0: 'D', 4: 'D', 8: 'D', 12: 'D' } },
+  blues: { name: '12-bar blues', bars: [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7].map((x) => [x, '7']), scale: 'blues', swing: 0.64, bpm: 92,
+    kick: 'x.......x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.o.', bass: [0, 4, 7, 9, 10, 9, 7, 4].map((iv, i) => [i * 2, iv, 2]), strum: { 2: 'S', 10: 'S' } },
+  minor: { name: 'Minor ballad', bars: [[0, 'min'], [8, 'maj'], [3, 'maj'], [10, 'maj']], scale: 'minpent', bpm: 76,
+    kick: 'x...............', snare: '........x.......', hat: 'x...x...x...x...', bass: [[0, 0, 7], [8, 7, 7]], strum: { 0: 'D', 8: 'D' } },
+  funk: { name: 'Funk', bars: [[0, 'm7'], [5, '7']], scale: 'minpent', bpm: 100,
+    kick: 'x..x..x...x..x..', snare: '....x..g.g..x..g', hat: 'xgxgxgxgxgxgxgxg', bass: [[0, 0, 1], [3, 0, 1], [6, 12, 1], [7, 10, 1], [10, 0, 1], [13, 7, 1], [14, 10, 1]], strum: { 2: 'S', 6: 'S', 9: 'S', 13: 'S' } },
+  reggae: { name: 'Reggae', bars: [[0, 'maj'], [5, 'maj'], [7, 'maj'], [5, 'maj']], scale: 'majpent', bpm: 78,
+    kick: '........x.......', snare: '........g.......', hat: '..x...x...x...x.', bass: [[2, 0, 2], [4, 0, 2], [6, 7, 2], [8, 0, 3], [12, 4, 2], [14, 7, 2]], strum: { 4: 'S', 12: 'S' } },
+  jazz: { name: 'Jazz ii–V–I', bars: [[2, 'm7'], [7, '7'], [0, 'maj7'], [0, 'maj7']], scale: 'major', swing: 0.66, bpm: 120,
+    kick: 'g...g...g...g...', snare: '................', hat: 'o...o.o.o...o.o.', bass: 'walk', strum: { 6: 'S', 14: 'S' } },
+  metal: { name: 'Metal', bars: [[0, '5'], [8, '5'], [10, '5'], [0, '5']], scale: 'minor', bpm: 140,
+    kick: 'x.x.x.x.x.x.x.x.', snare: '....x.......x...', hat: 'o...x...x...x...', bass: [0, 2, 4, 6, 8, 10, 12, 14].map((k) => [k, 0, 2]), strum: { 0: 'D', 2: 'M', 4: 'M', 6: 'M', 8: 'M', 10: 'M', 12: 'D', 14: 'M' } },
+  country: { name: 'Country', bars: [[0, 'maj'], [5, 'maj'], [7, 'maj'], [0, 'maj']], scale: 'majpent', bpm: 112,
+    kick: 'x.......x.......', snare: '....g.......g...', hat: 'x.x.x.x.x.x.x.x.', bass: [[0, 0, 3], [8, 7, 3]], strum: { 4: 'S', 6: 'U', 12: 'S', 14: 'U' } },
 };
 const Jam = {
   id: 'jam', nav: 'Jam', title: 'Jam room',
@@ -89,8 +105,9 @@ const Jam = {
     const st = JAM_STYLES[this.style];
     const auto = st.scale;
     if (this.scaleMode === 'none') return [];
-    if (this.scaleMode === 'full') return auto === 'majpent' ? MAJ : auto === 'blues' ? BLUES : [0, 2, 3, 5, 7, 8, 10];
-    if (this.scaleMode === 'pent') return auto === 'majpent' ? [0, 2, 4, 7, 9] : MINPENT;
+    const majorish = auto === 'majpent' || auto === 'major';
+    if (this.scaleMode === 'full') return majorish ? MAJ : auto === 'blues' ? BLUES : this.style === 'funk' ? [0, 2, 3, 5, 7, 9, 10] : [0, 2, 3, 5, 7, 8, 10];
+    if (this.scaleMode === 'pent') return majorish ? [0, 2, 4, 7, 9] : MINPENT;
     return SCALES.find((x) => x.id === auto).iv;
   },
   renderBars() {
@@ -123,34 +140,41 @@ const Jam = {
   },
   tick() {
     const ctx = Sound.ctx, st = JAM_STYLES[this.style];
-    const eighth = 30 / this.bpm;
+    const six = 15 / this.bpm;
     while (this.next < ctx.currentTime + 0.15) {
-      const k = this.step % 8, bar = Math.floor(this.step / 8);
-      let t = this.next + (k % 2 === 1 ? eighth * (st.swing ? (st.swing * 2 - 1) : 0) : 0);
-      const c = this.chordAt(bar);
-      this.schedule(k, t, c, st, eighth, bar);
-      if (k === 0) { const delay = Math.max(0, (t - ctx.currentTime) * 1000); setTimeout(() => { if (!this.playing) return; this.bar = bar; this.drawChord(bar); }, delay); }
-      if (k % 2 === 0) { const delay = Math.max(0, (t - ctx.currentTime) * 1000); const beat = k / 2; setTimeout(() => { if (!this.playing) return; $$('#jm-beats i', this.p).forEach((d, j) => d.classList.toggle('on', j === beat)); }, delay); }
-      this.next += eighth; this.step++;
+      const k = this.step % 16, bar = Math.floor(this.step / 16);
+      const t = this.next + (st.swing && k % 4 === 2 ? (st.swing * 2 - 1) * six * 2 : 0);
+      this.schedule(k, t, this.chordAt(bar), this.chordAt(bar + 1), st, six);
+      const delay = Math.max(0, (t - ctx.currentTime) * 1000);
+      if (k === 0) setTimeout(() => { if (!this.playing) return; this.bar = bar; this.drawChord(bar); }, delay);
+      if (k % 4 === 0) { const beat = k / 4; setTimeout(() => { if (!this.playing) return; $$('#jm-beats i', this.p).forEach((d, j) => d.classList.toggle('on', j === beat)); }, delay); }
+      this.next += six; this.step++;
     }
   },
-  schedule(k, t, c, st, eighth, bar) {
-    const L = this.layers, beat = k / 2;
+  schedule(k, t, c, nxt, st, six) {
+    const L = this.layers, hit = (pat) => pat[k] && pat[k] !== '.' ? pat[k] : null;
     if (L.drums) {
-      if (this.style === 'minor') { if (k === 0) Sound.kick(t); if (k === 4) Sound.snare(t, 0.8); if (k % 2 === 0) Sound.hat(t, 0.6); }
-      else { if (k === 0 || k === 4 || (this.style === 'rock' && k === 5)) Sound.kick(t); if (k === 2 || k === 6) Sound.snare(t); Sound.hat(t, k % 2 ? 0.55 : 0.85, this.style === 'blues' && k === 7); }
+      const kk = hit(st.kick); if (kk) Sound.kick(t, kk === 'g' ? 0.35 : 1);
+      const sn = hit(st.snare); if (sn) Sound.snare(t, sn === 'g' ? 0.28 : 1);
+      const hh = hit(st.hat); if (hh) Sound.hat(t, hh === 'g' ? 0.35 : k % 4 === 0 ? 0.9 : 0.6, hh === 'o');
     }
-    const r = c.root, bassRoot = 33 + mod(r - 9, 12);
+    const bassRoot = 33 + mod(c.root - 9, 12);
     if (L.bass) {
-      if (this.style === 'blues') { const walk = [0, 4, 7, 9, 10, 9, 7, 4]; Sound.bass(bassRoot + walk[k], t, eighth * 0.95); }
-      else if (this.style === 'rock') Sound.bass(bassRoot, t, eighth * 0.9);
-      else if (this.style === 'pop') { if (k === 0 || k === 3 || k === 4 || k === 6) Sound.bass(bassRoot + (k === 6 ? 7 : 0), t, eighth * 1.6); }
-      else if (k === 0 || k === 4) Sound.bass(bassRoot + (k === 4 ? 7 : 0), t, eighth * 3.6);
+      if (st.bass === 'walk') {
+        if (k % 4 === 0) {
+          const third = chordType(c.id).iv.includes(3) ? 3 : 4, nextRoot = 33 + mod(nxt.root - 9, 12);
+          const walk = [bassRoot, bassRoot + third, bassRoot + 7, nextRoot + (nextRoot > bassRoot + 7 ? -1 : 1)];
+          Sound.bass(walk[k / 4], t, six * 3.6);
+        }
+      } else st.bass.forEach(([step, iv, len]) => { if (step === k) Sound.bass(bassRoot + iv, t, six * len * 0.95); });
     }
     if (L.chords) {
+      const dir = st.strum[k]; if (!dir) return;
       const v = this.voicing(c); if (!v) return;
-      const pat = this.style === 'pop' ? { 0: 'D', 2: 'D', 3: 'U', 5: 'U', 6: 'D', 7: 'U' } : this.style === 'rock' ? { 0: 'D', 2: 'D', 4: 'D', 6: 'D' } : this.style === 'blues' ? { 1: 'D', 5: 'D' } : { 0: 'D', 4: 'D' };
-      const dir = pat[k]; if (dir) Sound.strumAt(v.frets, t, dir === 'U', dir === 'U' ? 0.16 : 0.22);
+      if (dir === 'D') Sound.strumAt(v.frets, t, false, 0.22);
+      else if (dir === 'U') Sound.strumAt(v.frets, t, true, 0.15);
+      else if (dir === 'S') Sound.strumAt(v.frets, t, false, 0.2, six * 1.4, 0.008);
+      else if (dir === 'M') Sound.strumAt(v.frets, t, false, 0.24, six * 0.9, 0.006);
     }
   },
   vcache: {},

@@ -1,5 +1,5 @@
 /* Fretwave service worker: offline app shell + daily practice reminder */
-const CACHE = 'fretwave-v2';
+const CACHE = 'fretwave-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'firebase-config.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

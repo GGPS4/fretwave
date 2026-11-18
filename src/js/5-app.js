@@ -2,7 +2,7 @@
 const Ear = {
   id: 'ear', nav: 'Ear', title: 'Ear training',
   help: 'Listen first, then answer. After each answer the neck draws the shape you just heard, so the sound and the picture lock together.',
-  ex: 'intervals', set: [3, 4, 5, 7, 12], dir: 'up', chordSet: ['maj', 'min', '7', 'dim'], q: null, score: { ok: 0, n: 0, streak: 0 },
+  ex: 'intervals', set: [3, 4, 5, 7, 12], dir: 'up', chordSet: ['maj', 'min', '7', 'dim'], q: null, score: { ok: 0, n: 0, streak: 0 }, echoLen: 3, echoSet: 'major', echoHint: true,
   mount(p) {
     this.p = p; this.q = null;
     p.innerHTML = `<div class="panel-grid">
@@ -10,21 +10,23 @@ const Ear = {
         <div class="ear-top">
           <button class="play-orb" id="ear-play" aria-label="Play the sound">${ICONS.play}</button>
           <div><div class="verdict" id="ear-verdict">Press play and listen.</div><p class="muted" id="ear-sub" style="margin:4px 0 0">Then pick what you heard below.</p>
-          <div class="wrap" style="margin-top:12px"><button class="btn" id="ear-next" hidden>Next sound</button></div></div>
+          <div class="wrap" style="margin-top:12px"><button class="btn" id="ear-next" hidden>Next sound</button><button class="btn btn-primary" id="ear-back" hidden>${ICONS.mic}Now play it on your guitar</button></div></div>
         </div>
         <div class="answers" id="ear-answers"></div>
       </div>
       <div class="controls">
-        <div class="row"><span class="lbl">Practice</span>${seg('ear-ex', [['intervals', 'Intervals'], ['chords', 'Chord quality']], this.ex)}</div>
+        <div class="row"><span class="lbl">Practice</span>${seg('ear-ex', [['intervals', 'Intervals'], ['chords', 'Chord quality'], ['echo', 'Play it back']], this.ex)}</div>
         <div id="ear-opts" class="controls"></div>
       </div></div>`;
     wireSeg(p, 'ear-ex', (v) => { this.ex = v; this.q = null; this.renderOpts(); this.renderAnswers(); this.reset(); });
     $('#ear-play', p).addEventListener('click', () => (this.q && !this.q.done ? this.hear() : this.newQ()));
     $('#ear-next', p).addEventListener('click', () => this.newQ());
+    $('#ear-back', p).addEventListener('click', () => this.playBack());
     this.renderOpts(); this.renderAnswers(); this.reset();
   },
-  reset() { Neck.clear(); $('#hud').innerHTML = this.hudHTML(); $('#ear-verdict', this.p).textContent = 'Press play and listen.'; $('#ear-verdict', this.p).className = 'verdict'; $('#ear-next', this.p).hidden = true; },
-  hudHTML() { const s = this.score; return `<div class="prompt muted" style="font-weight:500;font-size:20px">${this.ex === 'intervals' ? 'How far apart are the two notes?' : 'What kind of chord is that?'}</div>${hudStats([[s.n ? Math.round(100 * s.ok / s.n) + '%' : '–', 'Accuracy'], [s.ok, 'Correct'], [s.streak, 'Streak', s.streak >= 5]])}`; },
+  unmount() { if (Mic.active) Mic.stop(); },
+  reset() { if (Mic.active) Mic.stop(); Neck.clear(); const bk = $('#ear-back', this.p); if (bk) bk.hidden = true; $('#hud').innerHTML = this.hudHTML(); $('#ear-verdict', this.p).textContent = 'Press play and listen.'; $('#ear-verdict', this.p).className = 'verdict'; $('#ear-next', this.p).hidden = true; },
+  hudHTML() { const s = this.score; return `<div class="prompt muted" style="font-weight:500;font-size:20px">${this.ex === 'intervals' ? 'How far apart are the two notes?' : this.ex === 'echo' ? 'Listen, then play the phrase back' : 'What kind of chord is that?'}</div>${hudStats([[s.n ? Math.round(100 * s.ok / s.n) + '%' : '–', 'Accuracy'], [s.ok, 'Correct'], [s.streak, 'Streak', s.streak >= 5]])}`; },
   renderOpts() {
     const box = $('#ear-opts', this.p);
     if (this.ex === 'intervals') {
@@ -36,6 +38,14 @@ const Ear = {
         b.setAttribute('aria-pressed', this.set.includes(v)); this.q = null; this.renderAnswers(); this.reset();
       });
       wireSeg(box, 'ear-dir', (v) => { this.dir = v; });
+    } else if (this.ex === 'echo') {
+      box.innerHTML = `<div class="row"><span class="lbl">Notes</span>${seg('ec-set', [['major', 'C major, open position'], ['pent', 'A minor pentatonic, frets 5–8'], ['string', 'One string only']], this.echoSet)}</div>
+        <div class="row"><span class="lbl">Phrase length</span>${seg('ec-len', [['2', '2 notes'], ['3', '3 notes'], ['4', '4 notes'], ['5', '5 notes']], this.echoLen)}</div>
+        <div class="row"><span class="lbl">Help</span><label class="switch"><input type="checkbox" id="ec-hint" ${this.echoHint ? 'checked' : ''}>Show the notes you can choose from</label></div>
+        <p class="muted" style="font-size:13.5px;margin:0">The first note is shown for you. Answer by tapping the neck, or turn on listening and play it on your guitar.</p>`;
+      wireSeg(box, 'ec-set', (v) => { this.echoSet = v; this.q = null; this.reset(); });
+      wireSeg(box, 'ec-len', (v) => { this.echoLen = +v; });
+      $('#ec-hint', box).addEventListener('change', (e) => { this.echoHint = e.target.checked; if (this.q && this.q.kind === 'echo') this.drawEcho(); });
     } else {
       box.innerHTML = `<div class="row row-wide"><span class="lbl">Chord types in the mix</span><div class="wrap" id="ear-cset">${CHORD_TYPES.filter((c) => c.id !== '5').map((c) => `<button type="button" class="chip" data-v="${c.id}" aria-pressed="${this.chordSet.includes(c.id)}">${c.name}</button>`).join('')}</div></div>`;
       $('#ear-cset', box).addEventListener('click', (e) => {
@@ -47,6 +57,11 @@ const Ear = {
   },
   renderAnswers() {
     const box = $('#ear-answers', this.p);
+    if (this.ex === 'echo') {
+      box.innerHTML = `<div class="echo"><div class="seq-dots big" id="ec-dots"></div><div class="wrap"><button class="btn" id="ec-mic">${ICONS.mic}Listen to my guitar</button></div></div>`;
+      $('#ec-mic', box).addEventListener('click', () => this.echoMic());
+      return;
+    }
     if (this.ex === 'intervals') {
       box.innerHTML = INTERVALS.filter((iv) => this.set.includes(iv.semi)).map((iv) => `<button type="button" class="answer" data-v="${iv.semi}"><b>${iv.name}</b><small>${iv.song}</small></button>`).join('');
     } else {
@@ -61,6 +76,7 @@ const Ear = {
     $('#ear-next', this.p).hidden = true;
     $('#ear-verdict', this.p).textContent = 'Listen…'; $('#ear-verdict', this.p).className = 'verdict';
     $('#ear-sub', this.p).textContent = 'Press the orb to hear it again.';
+    if (this.ex === 'echo') { this.newEcho(); return; }
     if (this.ex === 'intervals') {
       const semi = rand(this.set);
       const n = strings().length, F = Math.min(S.settings.frets, 12);
@@ -89,6 +105,7 @@ const Ear = {
   hear() {
     const q = this.q; if (!q) return;
     const orb = $('#ear-play', this.p); orb.classList.add('playing'); setTimeout(() => orb.classList.remove('playing'), 1300);
+    if (q.kind === 'echo') { q.cells.forEach((c, i) => Sound.play(c.midi, 0.05 + i * 0.5, 0.5)); return; }
     if (q.kind === 'iv') {
       const [first, second] = q.dir === 'down' ? [q.b, q.a] : [q.a, q.b];
       if (q.dir === 'both') { Sound.play(first.midi, 0.02); Sound.play(second.midi, 0.02); }
@@ -136,10 +153,82 @@ const Ear = {
       Neck.scrollTo(q.v.base + 1);
     }
     vd.className = 'verdict ' + (good && !q.missed ? 'good' : good ? '' : 'bad');
-    $('#ear-next', this.p).hidden = false;
+    $('#ear-next', this.p).hidden = false; $('#ear-back', this.p).hidden = false;
     $('#ear-next', this.p).focus({ preventScroll: true });
   },
-  onCell(s, f) { Neck.play(s, f); },
+  /* ---- play it back on a real guitar ---- */
+  async playBack() {
+    const q = this.q; if (!q) return;
+    const btn = $('#ear-back', this.p), sub = $('#ear-sub', this.p), vd = $('#ear-verdict', this.p);
+    if (Mic.active) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; return; }
+    try { await Mic.start(() => {}); } catch (e) { micError(e); return; }
+    btn.innerHTML = `${ICONS.stop}Stop listening`;
+    if (q.kind === 'iv') {
+      const order = q.dir === 'down' ? [q.b.pc, q.a.pc] : [q.a.pc, q.b.pc];
+      let got = 0, last = -1, st = 0;
+      sub.textContent = `Play ${noteName(order[0])}, then ${noteName(order[1])}, anywhere on the neck.`;
+      Mic.listen((f) => {
+        if (f <= 0) { st = 0; return; } const m = Math.round(69 + 12 * Math.log2(f / 440));
+        if (m === last) st++; else { st = 1; last = m; } if (st !== 3) return;
+        if (m % 12 === order[got] || (q.dir === 'both' && order.includes(m % 12) && got === 0)) { allCells((x) => x === m).forEach((c) => Neck.pluck(c.s, c.f, '#5ee6a8')); got++; sub.textContent = got === 1 ? `Good: ${noteName(m % 12)}. Now the second note.` : ''; }
+        if (got >= 2) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; vd.textContent = 'You played it back!'; vd.className = 'verdict good'; sub.textContent = 'Hearing it, naming it and playing it is how intervals stick.'; }
+      });
+    } else if (q.kind === 'ch') {
+      const pcs = [...new Set(chordType(q.id).iv.map((i) => mod(q.root + i, 12)))]; let good = 0;
+      sub.textContent = 'Strum the chord shown on the neck and let it ring.';
+      Mic.chromaCb = (c) => { const r = checkChord(c, pcs); if (r && r.ok) { if (++good >= 4) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; vd.textContent = 'Clean! You played it back.'; vd.className = 'verdict good'; } } else good = 0; };
+    }
+  },
+  /* ---- melody echo ---- */
+  echoPool() {
+    if (this.echoSet === 'pent') return allCells((m, s, f) => f >= 5 && f <= 8 && MINPENT.map((x) => mod(9 + x, 12)).includes(m % 12));
+    if (this.echoSet === 'string') return allCells((m, s, f) => s === Math.min(2, strings().length - 1) && f <= 7);
+    return allCells((m, s, f) => f <= 3 && MAJ.includes(m % 12) && m >= strings()[0] + 3);
+  },
+  newEcho() {
+    const pool = this.echoPool().sort((a, b) => a.midi - b.midi || a.s - b.s);
+    const uniq = []; pool.forEach((c) => { if (!uniq.some((u) => u.midi === c.midi)) uniq.push(c); });
+    let i = Math.floor(uniq.length * (0.25 + Math.random() * 0.4)); const cells = [uniq[i]];
+    for (let k = 1; k < this.echoLen; k++) { const step = rand([-2, -1, -1, 1, 1, 2, 3]); i = clamp(i + step, 0, uniq.length - 1); if (uniq[i].midi === cells[cells.length - 1].midi) i = clamp(i + (i ? -1 : 1), 0, uniq.length - 1); cells.push(uniq[i]); }
+    this.q = { kind: 'echo', cells, pos: 1, tries: 0, missed: false };
+    this.drawEcho(); this.hear();
+    $('#ear-verdict', this.p).textContent = 'Play it back'; $('#ear-sub', this.p).textContent = 'The first note is given. Tap or play the rest.';
+  },
+  drawEcho() {
+    const q = this.q; Neck.clear();
+    if (this.echoHint) this.echoPool().forEach((c) => Neck.mark(c.s, c.f, { color: 'rgba(241,233,218,.35)', cls: 'small dim', r: 17 }));
+    q.cells.slice(0, q.pos).forEach((c, i) => Neck.noteMark(c.s, c.f, { label: i === 0 ? noteName(c.pc) : i + 1, ring: i === 0 }));
+    Neck.scrollTo(q.cells[0].f);
+    const dots = $('#ec-dots', this.p); if (dots) dots.innerHTML = q.cells.map((c, i) => `<i class="${i < q.pos ? 'done' : i === q.pos ? 'now' : ''}" style="${i < q.pos ? `background:${noteColor(c.pc)}` : ''}"></i>`).join('');
+  },
+  echoAnswer(m, s, f) {
+    const q = this.q; if (!q || q.kind !== 'echo' || q.done) return;
+    const want = q.cells[q.pos];
+    if (m === want.midi || (s == null && m % 12 === want.pc)) {
+      q.pos++; this.drawEcho();
+      if (q.pos >= q.cells.length) {
+        q.done = true; this.score.n++; if (!q.missed) { this.score.ok++; this.score.streak++; } else this.score.streak = 0;
+        $('#hud').innerHTML = this.hudHTML();
+        $('#ear-verdict', this.p).textContent = q.missed ? 'Got there!' : 'Perfect echo!'; $('#ear-verdict', this.p).className = 'verdict ' + (q.missed ? '' : 'good');
+        $('#ear-sub', this.p).textContent = q.cells.map((c) => noteName(c.pc)).join(' – ');
+        q.cells.forEach((c, i) => Neck.play(c.s, c.f, 0.4 + i * 0.4));
+        if (Mic.active) Mic.stop();
+        $('#ear-next', this.p).hidden = false;
+      }
+    } else {
+      q.tries++; q.missed = true; if (s != null) Neck.flashBad(s, f, noteName(m % 12));
+      if (q.tries % 2 === 0) { Neck.noteMark(want.s, want.f, { ring: true, cls: 'pulse target' }); Sound.play(want.midi, 0.3); }
+    }
+  },
+  async echoMic() {
+    const b = $('#ec-mic', this.p);
+    if (Mic.active) { Mic.stop(); b.innerHTML = `${ICONS.mic}Listen to my guitar`; return; }
+    try { await Mic.start(() => {}); } catch (e) { micError(e); return; }
+    b.innerHTML = `${ICONS.stop}Stop listening`;
+    let last = -1, st = 0;
+    Mic.listen((fq) => { if (fq <= 0) { st = 0; return; } const m = Math.round(69 + 12 * Math.log2(fq / 440)); if (m === last) st++; else { st = 1; last = m; } if (st === 3) { allCells((x) => x === m).forEach((c) => Neck.pluck(c.s, c.f)); this.echoAnswer(m, null, null); } });
+  },
+  onCell(s, f) { Neck.play(s, f); if (this.q && this.q.kind === 'echo' && !this.q.done) this.echoAnswer(midiAt(s, f), s, f); },
   onKey(e) { if (e.code === 'Space') { e.preventDefault(); this.q && !this.q.done ? this.hear() : this.newQ(); } },
 };
 

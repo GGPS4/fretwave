@@ -2,7 +2,11 @@
 // S.learn = { done: { lessonId: stars }, last: lessonId, open: {levelIndex: bool} }
 if (!S.learn) S.learn = saved.learn || { done: {}, last: null, open: {} };
 
-const LEVEL_NAMES = ['First steps', 'Beginner', 'Improver', 'Intermediate', 'Fluent'];
+const LEVEL_NAMES = ['First steps', 'Beginner', 'Improver', 'Developing', 'Intermediate', 'Fluent'];
+const BOX_DAYS = [1, 3, 7, 16, 35, 90];
+function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return dateStr(d); }
+function dueReviews() { const r = S.learn.review || {}; const t = today(); return Object.keys(r).filter((id) => lessonById(id) && r[id].due <= t).sort((a, b) => (r[a].due < r[b].due ? -1 : 1)); }
+function scheduleReview(id, passed) { S.learn.review = S.learn.review || {}; const cur = S.learn.review[id] || { box: 0 }; const box = passed ? Math.min(BOX_DAYS.length - 1, cur.box + 1) : 0; S.learn.review[id] = { box, due: addDays(BOX_DAYS[box]) }; }
 function allLessons() { const out = []; CURRICULUM.forEach((lv, li) => lv.lessons.forEach((ls, i) => out.push({ lv, li, ls, i }))); return out; }
 function lessonById(id) { return allLessons().find((x) => x.ls.id === id); }
 function levelProgress(lv) { const d = lv.lessons.filter((l) => S.learn.done[l.id]).length; return { done: d, total: lv.lessons.length, pct: d / lv.lessons.length }; }
@@ -14,7 +18,7 @@ function pathPct() { const all = allLessons(); return all.filter((x) => S.learn.
 const L = {
   timers: [],
   later(ms, fn) { const t = setTimeout(fn, ms); this.timers.push(t); return t; },
-  reset() { this.timers.forEach(clearTimeout); this.timers = []; Sound.stopAll(); Neck.cancelPending(); Neck.clear(); Sound.droneOff(); },
+  reset() { this.timers.forEach(clearTimeout); this.timers = []; Tech.stop(); Sound.stopAll(); Neck.cancelPending(); Neck.clear(); Neck.handOff(); Sound.droneOff(); },
   cell(s, f) { return { s, f, midi: midiAt(s, f), pc: midiAt(s, f) % 12 }; },
   note(s, f, o = {}) { return Neck.noteMark(s, f, o); },
   label(s, f, label, color, o = {}) { return Neck.mark(s, f, Object.assign({ label, color }, o)); },
@@ -34,6 +38,7 @@ const L = {
   naturals(s, a = 0, b = 12) { return this.onString(s, a, b, (c) => IS_NATURAL[c.pc]); },
   voicing(frets, root, iv, at = 0, o = {}) {
     drawVoicing({ frets }, root, iv, { stagger: true });
+    if (S.settings.hand !== false && !o.noHand && frets.filter((f) => f > 0).length) Neck.hand(frets); else Neck.handOff();
     if (!o.silent) strum(frets, { at });
   },
   chord(root, id, at = 0.2, o = {}) {
@@ -85,7 +90,7 @@ function pentShape(root, n) {
 const Player = {
   active: false,
   open(steps, opts) {
-    this.steps = steps; this.opts = opts; this.i = 0; this.mistakes = 0; this.passed = new Set();
+    this.steps = steps; this.opts = opts; this.i = 0; this.mistakes = 0; this.passed = new Set(); this.stepMiss = [];
     this.active = true; this.saveInst = null;
     const st = S.settings;
     if (st.instrument !== 'guitar' || st.tuning !== 'standard' || st.frets < 15) {
@@ -131,7 +136,7 @@ const Player = {
     $('#lp-back').addEventListener('click', () => this.go(this.i - 1));
     $('#lp-next').addEventListener('click', () => this.next());
     $('#lp-replay').addEventListener('click', () => this.show(true));
-    const sk = $('#lp-skip'); if (sk) sk.addEventListener('click', () => { this.mistakes += 2; this.passed.add(this.i); this.next(); });
+    const sk = $('#lp-skip'); if (sk) sk.addEventListener('click', () => { this.mistakes += 2; this.stepMiss[this.i] = (this.stepMiss[this.i] || 0) + 2; this.passed.add(this.i); this.next(); });
     $$('[data-goto]', p).forEach((b) => b.addEventListener('click', () => { this.close(true); setMode(b.dataset.goto); }));
     this.show(false);
     if (st.check) Checks.start(st.check, $('#lp-check'), () => { this.passed.add(this.i); const nb = $('#lp-next'); nb.disabled = false; nb.focus({ preventScroll: true }); });
@@ -179,7 +184,7 @@ const Checks = {
     const items = spec.items ? spec.items.slice() : spec.gen ? Array.from({ length: spec.n || 3 }, () => spec.gen()) : [spec];
     const kind = spec.type;
     const run = { idx: 0, items, kind, box, spec };
-    const fail = () => { Player.mistakes++; };
+    const fail = () => { Player.mistakes++; Player.stepMiss[Player.i] = (Player.stepMiss[Player.i] || 0) + 1; };
     const advance = () => {
       run.idx++;
       if (run.idx >= items.length) { box.innerHTML = `<div class="check-ok">${ICONS.check}<span>${esc(spec.doneText || 'Nice. Check passed.')}</span></div>`; this.cur = null; Neck.onCell = (s, f) => Player.onCell(s, f); pass(); return; }
@@ -368,7 +373,7 @@ function celebrate() {
 /* ================= Path (Learn home) ================= */
 const Path = {
   id: 'path', nav: 'Path', title: 'Your learning path',
-  help: 'Five levels, from your first string names to seeing the whole neck. Follow the glowing lesson, or jump to anything that interests you.',
+  help: 'Six levels, from your first string names to seeing the whole neck. Follow the glowing lesson, or jump to anything that interests you.',
   noNeck: true,
   mount(p) { this.p = p; if (Player.active) Player.close(true); this.show(); },
   unmount() { if (Player.active) Player.close(true); },
@@ -391,13 +396,19 @@ const Path = {
             ${li === cur ? '<span class="rm-pin">You are here</span>' : ''}</button>`; }).join('')}
         </div>
       </div>
-      ${nx ? `<div class="next-card" style="--c:${KIND_COLORS[nx.ls.kind]}">
+      ${this.welcomeHTML()}${this.reviewHTML()}
+      ${nx && !this.showWelcome() ? `<div class="next-card" style="--c:${KIND_COLORS[nx.ls.kind]}">
         <div class="nc-icon">${ICONS[KIND_ICONS[nx.ls.kind]]}</div>
         <div class="nc-txt"><small>Up next: level ${nx.li + 1}, lesson ${nx.i + 1}</small><h2>${esc(nx.ls.title)}</h2><p>${esc(nx.ls.blurb)}</p></div>
         <button class="btn btn-primary btn-big" id="pt-go">${ICONS.play}Start lesson</button></div>`
-        : `<div class="next-card" style="--c:#5ee6a8"><div class="nc-icon">${ICONS.star}</div><div class="nc-txt"><small>Path complete</small><h2>You finished every lesson</h2><p>Keep your streak alive in Practice, or jam over a backing track in Play.</p></div><button class="btn btn-primary btn-big" data-goto="jam">${ICONS.play}Open Jam</button></div>`}
-      <div class="levels">${CURRICULUM.map((lv, li) => this.levelHTML(lv, li, cur)).join('')}</div>`;
+        : this.showWelcome() ? '' : `<div class="next-card" style="--c:#5ee6a8"><div class="nc-icon">${ICONS.star}</div><div class="nc-txt"><small>Path complete</small><h2>You finished every lesson</h2><p>Keep your streak alive in Practice, or jam over a backing track in Play.</p></div><button class="btn btn-primary btn-big" data-goto="jam">${ICONS.play}Open Jam</button></div>`}
+      <div class="levels">${CURRICULUM.map((lv, li) => this.levelHTML(lv, li, cur)).join('')}</div>
+      <p class="path-foot muted">Already play a bit? <button class="linkish" id="pt-place">Retake the placement quiz</button> to jump ahead.</p>`;
     const go = $('#pt-go', p); if (go) go.addEventListener('click', () => this.startLesson(nx.ls.id));
+    const wn = $('#wl-new', p); if (wn) wn.addEventListener('click', () => { S.learn.welcomed = true; persist(); this.startLesson(nx.ls.id); });
+    const wp = $('#wl-place', p); if (wp) wp.addEventListener('click', () => this.placement());
+    const rv = $('#rv-go', p); if (rv) rv.addEventListener('click', () => this.review());
+    const pl = $('#pt-place', p); if (pl) pl.addEventListener('click', () => this.placement());
     $$('[data-goto]', p).forEach((b) => b.addEventListener('click', () => setMode(b.dataset.goto)));
     $$('.rm-seg', p).forEach((b) => b.addEventListener('click', () => { const li = +b.dataset.lv; S.learn.open[li] = true; persist(); this.show(); const el = $(`#lv-${li}`); if (el) el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); }));
     $$('.lv-toggle', p).forEach((b) => b.addEventListener('click', () => { const li = +b.dataset.lv; S.learn.open[li] = !this.isOpen(li, cur); persist(); this.show(); }));
@@ -407,7 +418,7 @@ const Path = {
   },
   isOpen(li, cur) { return S.learn.open[li] != null ? S.learn.open[li] : li === cur; },
   levelHTML(lv, li, cur) {
-    const pr = levelProgress(lv); const open = this.isOpen(li, cur); const nx = nextLesson();
+    const pr = levelProgress(lv); const open = this.isOpen(li, cur); const nx = nextLesson(); const dueSet = new Set(dueReviews());
     return `<section class="level${open ? ' open' : ''}${li === cur ? ' current' : ''}" id="lv-${li}">
       <header class="lv-head">
         <div class="lv-num">${pr.done === pr.total ? ICONS.check : li + 1}</div>
@@ -421,9 +432,61 @@ const Path = {
         const st = S.learn.done[ls.id] || 0; const isNext = nx && nx.ls.id === ls.id;
         const off = [0, 1, 2, 1, 0, -1, -2, -1][i % 8];
         return `<div class="node-row" style="--off:${off}"><button class="node${st ? ' done' : ''}${isNext ? ' next' : ''}" data-id="${ls.id}" style="--c:${KIND_COLORS[ls.kind]}" aria-label="${esc(ls.title)}${st ? `, ${st} stars` : ''}">${ICONS[KIND_ICONS[ls.kind]]}${isNext ? '<span class="node-go">Start</span>' : ''}</button>
-          <div class="node-label"><b>${esc(ls.title)}</b><span>${KIND_NAMES[ls.kind]}, ${ls.mins} min</span>${st ? `<span class="stars">${[1, 2, 3].map((k) => `<i class="${k <= st ? 'on' : ''}">${ICONS.star}</i>`).join('')}</span>` : ''}</div></div>`;
+          <div class="node-label"><b>${esc(ls.title)}</b><span>${KIND_NAMES[ls.kind]}, ${ls.mins} min${dueSet.has(ls.id) ? ' <em class="due">Review due</em>' : ''}</span>${st ? ((S.learn.skip || {})[ls.id] ? '<span class="placed">Placed out</span>' : `<span class="stars">${[1, 2, 3].map((k) => `<i class="${k <= st ? 'on' : ''}">${ICONS.star}</i>`).join('')}</span>`) : ''}</div></div>`;
       }).join('')}</div>` : ''}
     </section>`;
+  },
+  showWelcome() { return !S.learn.welcomed && !Object.keys(S.learn.done).length; },
+  welcomeHTML() {
+    if (!this.showWelcome()) return '';
+    return `<div class="welcome">
+      <div><h2>Welcome to Fretwave</h2><p>Where should you start? Brand new players begin at lesson 1. If you already play, a 3-minute placement quiz skips what you know.</p></div>
+      <div class="welcome-btns"><button class="btn btn-primary btn-big" id="wl-new">${ICONS.play}I'm new: start lesson 1</button><button class="btn btn-big" id="wl-place">${ICONS.find}I already play: find my level</button></div></div>`;
+  },
+  reviewHTML() {
+    const due = dueReviews(); if (!due.length || this.showWelcome()) return '';
+    const names = due.slice(0, 3).map((id) => lessonById(id).ls.title);
+    return `<div class="review-card"><div class="rv-icon">${ICONS.replay}</div><div class="nc-txt"><small>Spaced review</small><h3>${due.length} lesson${due.length > 1 ? 's' : ''} ready for a quick refresh</h3><p>${esc(names.join(', '))}${due.length > 3 ? ' and more' : ''}. About ${Math.min(5, due.length) * 30} seconds.</p></div><button class="btn btn-big" id="rv-go">Start review</button></div>`;
+  },
+  review() {
+    const ids = dueReviews().slice(0, 5); if (!ids.length) return;
+    const steps = [{ t: `Quick review: one question from each of ${ids.length} lesson${ids.length > 1 ? 's' : ''}. Things you remember come back less often; things you miss come back tomorrow.` }];
+    ids.forEach((id) => { const x = lessonById(id); const st = x.ls.steps.find((s) => s.check); if (!st) return; const c = st.check; steps.push({ t: `From “${x.ls.title}”: ${st.t}`, show: st.show, rid: id, check: c.gen ? Object.assign({}, c, { n: 1 }) : c.items ? Object.assign({}, c, { items: [rand(c.items)] }) : c }); });
+    if (current !== this) setMode('path');
+    $('#mode-title').textContent = 'Review';
+    Player.open(steps, { title: 'Spaced review', kicker: `${ids.length} lessons`, onDone: () => {
+      let ok = 0; steps.forEach((s, i) => { if (!s.rid) return; const pass = !(Player.stepMiss[i] > 0); if (pass) ok++; scheduleReview(s.rid, pass); }); persist();
+      return { headline: `${ok} of ${steps.length - 1} remembered`, sub: ok === steps.length - 1 ? 'Solid. These will come back in a few days.' : 'The ones you missed come back tomorrow. That is how they stick.' };
+    } });
+  },
+  placement() {
+    const Q = (lv, check, t) => ({ t: t || `Question about level ${lv + 1}`, lv, check });
+    const steps = [
+      { t: 'Answer what you can and press “Skip this check” for anything you don’t know. Fretwave will start you at the first level with something new for you.' },
+      Q(0, { type: 'tap', items: [{ prompt: 'Tap the open <b>G</b> string.', target: (s, f) => s === 3 && f === 0 }] }),
+      Q(0, { type: 'tap', items: [{ prompt: 'Tap <b>A</b> on the 6th string (frets 1 to 12).', target: (s, f) => s === 0 && f === 5 }] }),
+      Q(1, { type: 'quiz', items: [{ q: 'A major chord is built from…', options: ['Root, 3rd and 5th', 'Root, 4th and 6th', 'Root, 2nd and 7th'], answer: 0 }] }),
+      Q(1, { type: 'ear', n: 1, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; const r = rand([0, 2, 7, 9]); return { q: 'Major or minor?', options: ['Major', 'Minor'], answer: k, play: () => hearChords([[r, k ? 'min' : 'maj']]) }; } }),
+      Q(2, { type: 'quiz', items: [{ q: 'How many sharps are in D major?', options: ['One', 'Two', 'Three'], answer: 1 }] }),
+      Q(2, { type: 'quiz', items: [{ q: 'In the key of G, the IV chord is…', options: ['C', 'D', 'Am'], answer: 0 }] }),
+      Q(3, { type: 'quiz', items: [{ q: 'A pull-off means…', options: ['Picking the same note twice', 'Pulling a finger off so a lower note rings', 'Bending the string down'], answer: 1 }] }),
+      Q(3, { type: 'ear', n: 1, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; return { q: 'Bend or slide?', options: ['Bend', 'Slide'], answer: k, play: () => (k ? Tech.slide(3, 7, 9, 0.1, 0.42, true) : Tech.bend(3, 7, 2, 0.1, { quiet: true })) }; } }),
+      Q(4, { type: 'quiz', items: [{ q: 'Which degrees make the minor pentatonic?', options: ['1 ♭3 4 5 ♭7', '1 2 3 5 6', '1 2 ♭3 5 ♭6'], answer: 0 }] }),
+      Q(4, { type: 'tap', items: [{ prompt: 'Tap any <b>A</b> between frets 5 and 8.', target: (s, f, m) => m % 12 === 9 && f >= 5 && f <= 8, show: (L) => L.shade([5, 8]) }] }),
+      Q(5, { type: 'quiz', items: [{ q: 'D Dorian uses the same notes as…', options: ['C major', 'D major', 'G major'], answer: 0 }] }),
+      Q(5, { type: 'quiz', items: [{ q: 'In CAGED, which shape comes after A?', options: ['G', 'E', 'D'], answer: 0 }] }),
+    ];
+    if (current !== this) setMode('path');
+    $('#mode-title').textContent = 'Placement quiz';
+    Player.open(steps, { title: 'Placement quiz', kicker: '12 quick questions', onDone: () => {
+      let placed = CURRICULUM.length;
+      for (let lv = 0; lv < CURRICULUM.length; lv++) { if (steps.some((s, i) => s.lv === lv && Player.stepMiss[i] > 0)) { placed = lv; break; } }
+      S.learn.skip = S.learn.skip || {};
+      CURRICULUM.forEach((lv, li) => { if (li < placed) lv.lessons.forEach((ls) => { if (!S.learn.done[ls.id]) { S.learn.done[ls.id] = 1; S.learn.skip[ls.id] = true; } }); });
+      S.learn.welcomed = true; S.learn.placed = placed; persist(); renderDaily();
+      if (placed >= CURRICULUM.length) return { headline: 'You know it all', sub: 'Every level is marked done. Lessons are still there whenever you want a refresher.' };
+      return { headline: placed === 0 ? 'Start at level 1' : `You start at level ${placed + 1}`, sub: `“${CURRICULUM[placed].title}” is where the new material begins.${placed ? ' Earlier levels are marked as placed out; open any of them for a refresher.' : ''}` };
+    } });
   },
   startLesson(id) {
     const x = lessonById(id); if (!x) return;
@@ -432,7 +495,7 @@ const Path = {
     $('#mode-title').textContent = x.ls.title; $('#mode-help').textContent = x.ls.blurb;
     Player.open(x.ls.steps, {
       title: x.ls.title, kicker: `Level ${x.li + 1}, lesson ${x.i + 1}`,
-      onDone: (stars) => { S.learn.done[id] = Math.max(S.learn.done[id] || 0, stars); persist(); renderDaily(); const lp = levelProgress(x.lv); if (lp.done === lp.total) return { headline: `Level ${x.li + 1} complete!`, sub: `You finished “${x.lv.title}”. On to ${CURRICULUM[x.li + 1] ? '“' + CURRICULUM[x.li + 1].title + '”' : 'the Jam room'}.` }; return null; },
+      onDone: (stars) => { S.learn.done[id] = Math.max(S.learn.done[id] || 0, stars); if (S.learn.skip) delete S.learn.skip[id]; if (!(S.learn.review || {})[id]) scheduleReview(id, stars === 3); persist(); renderDaily(); const lp = levelProgress(x.lv); if (lp.done === lp.total) return { headline: `Level ${x.li + 1} complete!`, sub: `You finished “${x.lv.title}”. On to ${CURRICULUM[x.li + 1] ? '“' + CURRICULUM[x.li + 1].title + '”' : 'the Jam room'}.` }; return null; },
     });
   },
   testOut(li) {
@@ -463,10 +526,11 @@ const Theory = {
   mount(p) {
     setStage(false);
     const cur = currentLevelIndex();
-    p.innerHTML = `<div class="guides">${CURRICULUM.map((lv, li) => `<details class="guide" id="gd-${li}" ${(this.focus ?? cur) === li ? 'open' : ''}>
+    p.innerHTML = `${printablesHTML()}<div class="guides">${CURRICULUM.map((lv, li) => `<details class="guide" id="gd-${li}" ${(this.focus ?? cur) === li ? 'open' : ''}>
       <summary><span class="lv-num small">${li + 1}</span><span><b>${esc(lv.title)}</b><small>${esc(lv.blurb)}</small></span></summary>
       <div class="guide-body">${lv.guide.map(([h, body]) => `<div class="g-item"><h4>${h}</h4><div>${body}</div></div>`).join('')}
-      <div class="g-lessons"><span class="muted">Lessons:</span>${lv.lessons.map((ls) => `<button class="chip" data-id="${ls.id}">${S.learn.done[ls.id] ? ICONS.check : ''}${esc(ls.title)}</button>`).join('')}</div></div></details>`).join('')}</div>`;
+      <div class="g-lessons"><span class="muted">Lessons:</span>${lv.lessons.map((ls) => `<button class="chip" data-id="${ls.id}">${S.learn.done[ls.id] ? ICONS.check : ''}${esc(ls.title)}</button>`).join('')}<button class="chip" data-print-level="${li}">${ICONS.download}Print this guidebook</button></div></div></details>`).join('')}</div>`;
+    wirePrintables(p);
     $$('.g-lessons .chip', p).forEach((b) => b.addEventListener('click', () => { setMode('path'); Path.startLesson(b.dataset.id); }));
     if (this.focus != null) { const el = $(`#gd-${this.focus}`); if (el) setTimeout(() => el.scrollIntoView({ block: 'start' }), 50); this.focus = null; }
   },

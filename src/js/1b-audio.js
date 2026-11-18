@@ -86,10 +86,10 @@ Object.assign(Sound, {
     o.start(t); o2.start(t); o.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
   },
   // strum a voicing at an absolute audio time without touching the neck
-  strumAt(frets, t, up, gain = 0.3) {
+  strumAt(frets, t, up, gain = 0.3, dur = 0, spread = 0.018) {
     const order = frets.map((f, s) => ({ f, s })).filter((x) => x.f >= 0); if (up) order.reverse();
     const base = this.ctx.currentTime;
-    order.forEach((x, i) => this.play(strings()[x.s] + x.f, Math.max(0, t - base + i * 0.018), gain));
+    order.forEach((x, i) => this.play(strings()[x.s] + x.f, Math.max(0, t - base + i * spread), gain, dur));
   },
 });
 

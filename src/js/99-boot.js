@@ -3,17 +3,17 @@ const GROUPS = [
   { id: 'learn', name: 'Learn', icon: 'learn', modes: ['path', 'theory', 'progress'], hint: 'Lessons and your roadmap' },
   { id: 'practice', name: 'Practice', icon: 'find', modes: ['find', 'name', 'ear'], hint: 'Quick drills' },
   { id: 'play', name: 'Play', icon: 'jam', modes: ['jam', 'tabs', 'live', 'check'], hint: 'Play your real guitar' },
-  { id: 'tools', name: 'Tools', icon: 'tools', modes: ['explore', 'chords', 'scales', 'tuner'], hint: 'Reference and tuner' },
+  { id: 'tools', name: 'Tools', icon: 'tools', modes: ['explore', 'chords', 'scales', 'circle', 'tunings', 'tuner'], hint: 'Reference, tunings and tuner' },
 ];
-const MODES = [Path, Theory, Progress, Find, NameIt, Ear, Jam, Tabs, Live, Check, Explore, Chords, Scales, Tuner];
-const SUB_LABELS = { path: 'Path', theory: 'Theory notes', progress: 'Progress', find: 'Find it', name: 'Name it', ear: 'Ear training', jam: 'Jam room', tabs: 'Tab player', live: 'Live view', check: 'Chord check', explore: 'Neck', chords: 'Chords', scales: 'Scales', tuner: 'Tuner' };
+const MODES = [Path, Theory, Progress, Find, NameIt, Ear, Jam, Tabs, Live, Check, Explore, Chords, Scales, Circle, Tunings, Tuner];
+const SUB_LABELS = { path: 'Path', theory: 'Theory notes', progress: 'Progress', find: 'Find it', name: 'Name it', ear: 'Ear training', jam: 'Jam room', tabs: 'Tab player', live: 'Live view', check: 'Chord check', explore: 'Neck', chords: 'Chords', scales: 'Scales', circle: 'Circle of fifths', tunings: 'Tunings', tuner: 'Tuner' };
 let current = null;
 const groupOf = (id) => GROUPS.find((g) => g.modes.includes(id)) || GROUPS[0];
 function setStage(on) { $('#stage').hidden = !on; }
 function setMode(id) {
   const m = MODES.find((x) => x.id === id) || Path;
   if (current && current.unmount) current.unmount();
-  Sound.stopAll(); Neck.cancelPending(); Checks.stop();
+  Sound.stopAll(); Neck.cancelPending(); Checks.stop(); Tech.stop(); Neck.handOff();
   current = m; S.mode = m.id; S.settings.lastMode = m.id;
   const g = groupOf(m.id); S.settings.lastIn = S.settings.lastIn || {}; S.settings.lastIn[g.id] = m.id; persist();
   $$('#nav .nav-btn').forEach((b) => b.setAttribute('aria-current', b.dataset.g === g.id ? 'page' : 'false'));

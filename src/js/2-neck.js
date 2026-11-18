@@ -90,7 +90,9 @@ const Neck = {
       t.textContent = f === 0 ? 'open' : f;
     }
     this.fxBelow = el('g', {}, svg);
+    this.handL = el('g', { class: 'hand' }, svg); this.handPos = null;
     this.mLayer = el('g', {}, svg);
+    this.handTop = el('g', { class: 'hand' }, svg);
     this.fx = el('g', {}, svg);
     this.hits = el('g', {}, svg);
     strings().forEach((open, s) => {
@@ -123,7 +125,7 @@ const Neck = {
   },
   unmark(s, f) { const k = this.key(s, f); const m = this.markers.get(k); if (m) { m.remove(); this.markers.delete(k); } },
   has(s, f) { return this.markers.has(this.key(s, f)); },
-  clear() { this.mLayer.innerHTML = ''; this.fx.innerHTML = ''; this.fxBelow.innerHTML = ''; this.markers.clear(); },
+  clear() { this.mLayer.innerHTML = ''; this.fx.innerHTML = ''; this.fxBelow.innerHTML = ''; this.markers.clear(); this.strEls.forEach((sg) => sg && (sg.style.opacity = '')); },
   noteMark(s, f, extra = {}) {
     const pc = midiAt(s, f) % 12;
     return this.mark(s, f, Object.assign({ label: noteName(pc), color: noteColor(pc) }, extra));

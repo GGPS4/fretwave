@@ -33,7 +33,7 @@ const Chords = {
           <button class="btn" id="ch-arp">${ICONS.play}One string at a time</button>
           <label class="switch" style="margin-left:6px"><input type="checkbox" id="ch-all" ${this.showAll ? 'checked' : ''}>Show chord tones on the whole neck</label>
         </div>
-        <div class="wrap"><label class="switch"><input type="checkbox" id="ch-caged" ${this.caged ? 'checked' : ''}>CAGED map (major chords)</label><span id="ch-cagedbtns" class="wrap"></span></div>
+        <div class="wrap"><label class="switch"><input type="checkbox" id="ch-hand" ${S.settings.hand !== false ? 'checked' : ''}>Show my fretting hand</label><label class="switch"><input type="checkbox" id="ch-caged" ${this.caged ? 'checked' : ''}>CAGED map (major chords)</label><span id="ch-cagedbtns" class="wrap"></span></div>
         <div class="legend" id="ch-legend"></div>
       </div>
       <div class="controls">
@@ -52,6 +52,7 @@ const Chords = {
     $('#ch-strum', p).addEventListener('click', () => this.v && strum(this.v.frets));
     $('#ch-arp', p).addEventListener('click', () => this.v && strum(this.v.frets, { arp: true }));
     $('#ch-all', p).addEventListener('change', (e) => { this.showAll = e.target.checked; this.draw(); });
+    $('#ch-hand', p).addEventListener('change', (e) => { S.settings.hand = e.target.checked; persist(); this.draw(); });
     $('#ch-caged', p).addEventListener('change', (e) => { this.caged = e.target.checked; if (this.caged && this.type !== 'maj') { this.type = 'maj'; $$('#ch-types .chip', p).forEach((x) => x.setAttribute('aria-pressed', x.dataset.t === 'maj')); this.update(false); } else this.draw(); });
     wireSeg(p, 'ch-prog', (v) => { this.prog = v; this.stopLoop(); this.renderProg(); });
     $('#ch-loop', p).addEventListener('click', () => (this.loop ? this.stopLoop() : this.startLoop()));
@@ -84,7 +85,7 @@ const Chords = {
     if (this.caged && this.type === 'maj' && root === this.root && v === this.v) {
       const shapes = Neck.caged(root);
       if (cb && shapes.length) { cb.innerHTML = shapes.filter((sh) => sh.hi <= S.settings.frets).map((sh) => `<button class="chip" data-sh="${sh.name}" style="border-color:${sh.color}">${sh.name} shape</button>`).join(''); $$('[data-sh]', cb).forEach((b) => b.addEventListener('click', () => { const sh = shapes.find((x) => x.name === b.dataset.sh); Neck.caged(root, { only: sh.name }); strum(sh.frets); Neck.scrollTo(sh.lo + 1); })); }
-      return;
+      Neck.handOff(); return;
     }
     Neck.clear();
     if (this.showAll) {
@@ -95,6 +96,7 @@ const Chords = {
       });
     }
     if (v) drawVoicing(v, root, iv, { stagger: true });
+    if (v && S.settings.hand !== false && v.frets.some((f) => f > 0)) Neck.hand(v.frets); else Neck.handOff();
   },
   renderProg() {
     const box = $('#ch-cards', this.p); if (!box) return;

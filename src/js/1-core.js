@@ -144,7 +144,8 @@ const S = {
 };
 S.settings.drill = Object.assign({}, DEFAULTS.drill, S.settings.drill || {});
 function persist() {
-  store.save({ settings: S.settings, stats: S.stats, daily: S.daily, learn: S.learn });
+  const st = typeof Tunings !== 'undefined' && typeof current !== 'undefined' && current === Tunings && Tunings.real ? Object.assign({}, S.settings, { tuning: Tunings.real }) : S.settings;
+  store.save({ settings: st, stats: S.stats, daily: S.daily, learn: S.learn });
   if (typeof Sync !== 'undefined') Sync.queue();
   clearTimeout(persist._t);
   persist._t = setTimeout(() => { try { if ('caches' in window) caches.open('fretwave-state').then((c) => c.put('state.json', new Response(JSON.stringify({ last: S.daily.last, streak: S.daily.streak, reminder: S.settings.reminder || null })))).catch(() => {}); } catch (e) { /* no cache storage */ } }, 1500);
@@ -243,15 +244,19 @@ const Sound = {
     this.cache.set(key, buf);
     return buf;
   },
-  play(midi, when = 0, gain = 0.55) {
-    if (!S.settings.sound) return;
-    const ctx = this.ensure(); if (!ctx) return;
+  play(midi, when = 0, gain = 0.55, dur = 0, soft = false) {
+    if (!S.settings.sound) return null;
+    const ctx = this.ensure(); if (!ctx) return null;
     const src = ctx.createBufferSource(); src.buffer = this.buffer(midi);
-    const g = ctx.createGain(); g.gain.value = gain * (midi < 40 ? 1.25 : 1);
+    const g = ctx.createGain(); const t = ctx.currentTime + when; const peak = gain * (midi < 40 ? 1.25 : 1);
+    if (soft) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + 0.012); } else g.gain.value = peak;
+    if (dur) { g.gain.setValueAtTime(peak, t + dur); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.05); }
     src.connect(g); g.connect(this.master);
-    src.start(ctx.currentTime + when);
+    src.start(t, soft ? 0.006 : 0);
+    if (dur) src.stop(t + dur + 0.08);
     this.live.add(src); src.onended = () => this.live.delete(src);
     this.lastPlay = performance.now() + when * 1000;
+    return { src, g, t };
   },
   live: new Set(),
   stopAll() {

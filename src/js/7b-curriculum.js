@@ -282,7 +282,58 @@ const CURRICULUM = [
       },
     ],
   },
-  /* ------------------------------ LEVEL 4 ------------------------------ */
+  /* ------------------------------ LEVEL 4: TECHNIQUES ------------------------------ */
+  {
+    title: 'Techniques that make it sing', blurb: 'Hammer-ons, pull-offs, slides, bends and vibrato: how notes get their personality.',
+    guide: [
+      ['Hammer-on (h)', 'Pick one note, then slam another finger onto a higher fret of the same string. The second note sounds without picking. In tab: <b>5h7</b>.'],
+      ['Pull-off (p)', 'Pick the higher note, then pull that finger off sideways so a lower fretted (or open) note rings. In tab: <b>7p5</b>.'],
+      ['Slide (/ and \\)', 'Pick, keep pressing, and glide to another fret. The pitch passes through every fret on the way. In tab: <b>5/7</b> up, <b>7\\5</b> down.'],
+      ['Bend (b)', 'Push the string sideways to raise the pitch. A <b>full bend</b> = 2 frets (a whole step), a <b>half bend</b> = 1 fret. Check it against the target note. In tab: <b>7b9</b>.'],
+      ['Vibrato (~)', 'Small, repeated bends that make a held note sing. Drive it from the wrist, not the finger. In tab: <b>7~~~</b>.'],
+      ['Practice tip', 'Use these on the pentatonic shapes from the next level: they turn a scale into a solo.'],
+    ],
+    lessons: [
+      {
+        id: 'hammers', title: 'Hammer-ons and pull-offs', kind: 'neck', mins: 3, blurb: 'Two notes, one pick: smooth, fast phrasing.',
+        steps: [
+          { t: 'A <b>hammer-on</b> plays a second note without picking: pick one note, then slam another finger down on a higher fret of the same string.', show: () => Tech.hammer(3, 5, 7, 0.2) },
+          { t: 'A <b>pull-off</b> is the reverse: pick the higher note, then pull your finger off sideways (a tiny flick) so the lower note rings.', show: () => Tech.pull(3, 7, 5, 0.2) },
+          { t: 'Chain them and phrases flow without the pick getting in the way. Pick once, hammer, pull.', show: () => { const t = Tech.hammer(2, 5, 7, 0.2); Tech.pull(2, 7, 5, t); } },
+          { t: 'Listen closely.', check: { type: 'ear', n: 4, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; const s = rand([2, 3, 4]), f = 5; return { q: 'Was the second note picked or hammered on?', options: ['Picked', 'Hammered on'], answer: k, play: () => { Sound.play(midiAt(s, f), 0.05, 0.5); Sound.play(midiAt(s, f + 2), 0.45, k ? 0.34 : 0.5, 0, !!k); }, after: () => (k ? Tech.hammer(s, f, f + 2, 0.1) : null) }; } } },
+        ],
+      },
+      {
+        id: 'slides', title: 'Slides', kind: 'neck', mins: 3, blurb: 'Glide between notes for a vocal, smooth sound.',
+        steps: [
+          { t: 'To <b>slide</b>, pick a note and keep pressing as you glide to another fret. You hear every fret in between.', show: () => Tech.slide(1, 5, 7, 0.2) },
+          { t: 'Slide <b>up into</b> a note for attitude, or <b>down out of</b> a note to finish a phrase.', show: () => { const t = Tech.slide(2, 4, 7, 0.2, 0.3); Tech.slide(2, 7, 2, t + 0.2, 0.5); } },
+          { t: 'Keep the pressure steady while you move. Too light and the note dies; too hard and it drags.', show: () => Tech.slide(3, 2, 9, 0.2, 0.6) },
+          { t: 'Two picked notes, or one slide?', check: { type: 'ear', n: 4, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; const s = rand([1, 2, 3]); return { q: 'Did you hear a slide?', options: ['Two picked notes', 'A slide'], answer: k, play: () => { if (k) Tech.slide(s, 5, 7, 0.05, 0.42, true); else { Sound.play(midiAt(s, 5), 0.05, 0.5); Sound.play(midiAt(s, 7), 0.47, 0.5); } } }; } } },
+        ],
+      },
+      {
+        id: 'bends', title: 'String bends', kind: 'ear', mins: 4, blurb: 'Push the string to make it cry.',
+        steps: [
+          { t: 'Push a string sideways and its pitch rises. A <b>full bend</b> raises the note a whole step: the same as two frets higher.', show: () => Tech.bend(3, 7, 2, 0.2) },
+          { t: '<b>Bend to pitch</b>: first play the target note two frets up, then bend until your bend sounds the same.', show: () => { Neck.noteMark(3, 9, { ring: true }); Neck.play(3, 9, 0.2); Tech.bend(3, 7, 2, 1.2); } },
+          { t: 'A <b>half bend</b> (one fret) adds a bluesy cry. Let the string come back down for a <b>release</b>.', show: () => Tech.bend(3, 7, 1, 0.2, { release: true }) },
+          { t: 'Use three fingers to bend: your ring finger frets the note while the two fingers behind it help push.' , show: () => { Neck.noteMark(3, 7, { ring: true }); Neck.noteMark(3, 6, { cls: 'dim', label: '2' }); Neck.noteMark(3, 5, { cls: 'dim', label: '1' }); } },
+          { t: 'Train your ear for in-tune bends.', check: { type: 'ear', n: 3, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; return { q: 'The first note is the target. Did the bend reach it?', options: ['Yes, in tune', 'No, it fell short'], answer: k, play: () => { Sound.play(midiAt(3, 9), 0.05, 0.5); Tech.bend(3, 7, k ? 1.4 : 2, 1.0, { quiet: true }); }, after: () => Tech.bend(3, 7, k ? 1.4 : 2, 0.2) }; } } },
+        ],
+      },
+      {
+        id: 'vibrato', title: 'Vibrato', kind: 'ear', mins: 3, blurb: 'The wobble that makes long notes sing.',
+        steps: [
+          { t: '<b>Vibrato</b> is a gentle, repeated wobble in pitch. It makes a held note sound alive.', show: () => Tech.vibrato(4, 8, 0.2) },
+          { t: 'Compare: the same note held straight, then with vibrato.', show: () => { Neck.noteMark(4, 8); Neck.play(4, 8, 0.2); Tech.vibrato(4, 8, 2.1); } },
+          { t: 'Rock vibrato is wide and slow; classical vibrato is narrow and fast. Either way, drive it from the wrist with small repeated bends.', show: () => Tech.vibrato(3, 7, 0.2, 2.2, 0.03) },
+          { t: 'Straight or vibrato?', check: { type: 'ear', n: 4, gen: () => { const k = Math.random() < 0.5 ? 0 : 1; const s = rand([3, 4, 5]); return { q: 'Did that note have vibrato?', options: ['Held straight', 'Vibrato'], answer: k, play: () => { if (k) Tech.vibrato(s, 7, 0.05, 1.6, 0.014, true); else Sound.play(midiAt(s, 7), 0.05, 0.5); } }; } } },
+        ],
+      },
+    ],
+  },
+  /* ------------------------------ LEVEL 5 ------------------------------ */
   {
     title: 'Scales for soloing', blurb: 'Pentatonic shapes, the blues scale, and landing on the right notes.',
     guide: [
@@ -339,7 +390,7 @@ const CURRICULUM = [
       },
     ],
   },
-  /* ------------------------------ LEVEL 5 ------------------------------ */
+  /* ------------------------------ LEVEL 6 ------------------------------ */
   {
     title: 'See the whole neck', blurb: 'CAGED, triads, modes and reading tab: the big picture.',
     guide: [
