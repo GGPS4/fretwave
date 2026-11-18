@@ -3,10 +3,10 @@ const GROUPS = [
   { id: 'learn', name: 'Learn', icon: 'learn', modes: ['path', 'theory', 'progress'], hint: 'Lessons and your roadmap' },
   { id: 'practice', name: 'Practice', icon: 'find', modes: ['find', 'name', 'ear'], hint: 'Quick drills' },
   { id: 'play', name: 'Play', icon: 'jam', modes: ['jam', 'tabs', 'live', 'check'], hint: 'Play your real guitar' },
-  { id: 'tools', name: 'Tools', icon: 'tools', modes: ['explore', 'chords', 'scales', 'circle', 'tunings', 'tuner'], hint: 'Reference, tunings and tuner' },
+  { id: 'tools', name: 'Tools', icon: 'tools', modes: ['explore', 'chords', 'scales', 'analyzer', 'circle', 'tunings', 'tuner'], hint: 'Reference, tunings and tuner' },
 ];
-const MODES = [Path, Theory, Progress, Find, NameIt, Ear, Jam, Tabs, Live, Check, Explore, Chords, Scales, Circle, Tunings, Tuner];
-const SUB_LABELS = { path: 'Path', theory: 'Theory notes', progress: 'Progress', find: 'Find it', name: 'Name it', ear: 'Ear training', jam: 'Jam room', tabs: 'Tab player', live: 'Live view', check: 'Chord check', explore: 'Neck', chords: 'Chords', scales: 'Scales', circle: 'Circle of fifths', tunings: 'Tunings', tuner: 'Tuner' };
+const MODES = [Path, Theory, Progress, Find, NameIt, Ear, Jam, Tabs, Live, Check, Explore, Chords, Scales, Analyzer, Circle, Tunings, Tuner];
+const SUB_LABELS = { path: 'Path', theory: 'Theory notes', progress: 'Progress', find: 'Find it', name: 'Name it', ear: 'Ear training', jam: 'Jam room', tabs: 'Tab player', live: 'Live view', check: 'Chord check', explore: 'Neck', chords: 'Chords', scales: 'Scales', analyzer: 'Analyzer', circle: 'Circle of fifths', tunings: 'Tunings', tuner: 'Tuner' };
 let current = null;
 const groupOf = (id) => GROUPS.find((g) => g.modes.includes(id)) || GROUPS[0];
 function setStage(on) { $('#stage').hidden = !on; }
@@ -19,7 +19,7 @@ function setMode(id) {
   $$('#nav .nav-btn').forEach((b) => b.setAttribute('aria-current', b.dataset.g === g.id ? 'page' : 'false'));
   $('#subtabs').innerHTML = g.modes.map((mid) => `<button type="button" role="tab" class="subtab" data-m="${mid}" aria-selected="${mid === m.id}">${SUB_LABELS[mid]}</button>`).join('');
   $('#mode-title').textContent = m.title; $('#mode-help').textContent = m.help;
-  $('#hud').innerHTML = '';
+  $('#hud').innerHTML = ''; Why.hide();
   setStage(!m.noNeck);
   Neck.clear(); Neck.onCell = (s, f, e) => (m.onCell ? m.onCell(s, f, e) : Neck.play(s, f));
   m.mount($('#panel'));
@@ -50,6 +50,7 @@ function init() {
   $('#btn-sound').addEventListener('click', () => { S.settings.sound = !S.settings.sound; persist(); syncTopButtons(); if (S.settings.sound) Sound.play(57); else { Sound.stopAll(); Metro.stop(); } toast(S.settings.sound ? 'Sound on' : 'Sound off', 1000); });
   $('#btn-voice').addEventListener('click', () => { S.settings.speak = !S.settings.speak; persist(); syncTopButtons(); if (S.settings.speak) Voice.say('Note names on'); toast(S.settings.speak ? 'Note names will be spoken' : 'Spoken note names off', 1200); });
   $('#btn-settings').addEventListener('click', () => openSettings());
+  $('#btn-why').innerHTML = '<span class="why-q">?</span><span class="why-t">Why?</span>'; $('#btn-why').addEventListener('click', () => Why.toggle());
   $('#settings-done').addEventListener('click', () => $('#settings').close());
   document.addEventListener('keydown', (e) => {
     if ($('#settings').open || e.metaKey || e.ctrlKey || e.altKey) return;

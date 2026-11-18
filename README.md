@@ -20,7 +20,7 @@ Lessons are animated on the neck and read aloud (you can switch narration off). 
 The curriculum: **1 Meet the neck** (strings, musical alphabet, half and whole steps, notes on the low E and A strings, octave shapes, the 12th fret) · **2 Chords from scratch** (intervals, triads, major vs minor, E A D, G C Em Am, power chords, seventh chords) · **3 Keys and progressions** (major scale, keys, chords in a key, common progressions, circle of fifths, relative minor) · **4 Techniques** (hammer-ons and pull-offs, slides, bends, vibrato, each animated with real pitch changes) · **5 Scales for soloing** (pentatonic shapes, blues scale, targeting chord tones, 3-notes-per-string major) · **6 See the whole neck** (CAGED, triads, modes, reading tab).
 
 ### Practice
-**Find it** (find a named note on the neck, or play it on your guitar), **Name it** (name the lit-up fret), **Ear training** (intervals and chord qualities, then play what you heard back on your guitar; plus a **Play it back** melody-echo exercise). Smart order keeps bringing back your weak spots.
+**Find it** (find a named note on the neck, or play it on your guitar), **Name it** (name the lit-up fret), **Ear training** (intervals, chord qualities, **progressions** and **scale degrees**, then play what you heard back on your guitar while the mic checks it; plus a **Play it back** melody-echo exercise). Smart order keeps bringing back your weak spots.
 
 ### Play (with your real guitar)
 | Page | What it does |
@@ -31,9 +31,11 @@ The curriculum: **1 Meet the neck** (strings, musical alphabet, half and whole s
 | **Chord check** | Strum a chord and see which notes rang out and which string to fix. Includes "one-minute changes" (switch between two chords as many times as you can, with your best score saved) and "name what I play". |
 
 ### Tools
-**Neck** explorer, **Chords** (13 types, generated shapes, progressions, a **CAGED map**, and an animated **fretting hand** showing which finger goes where), **Scales** (10 scales by position, with a loop-and-speed-up trainer), **Circle of fifths** (interactive: tap a key and it rotates to the top with its chords lit up), **Tunings** (10 guitar tunings compared string by string, plus a step-by-step **retuning wizard** with a mic tuner), **Tuner**. A **metronome** with tap tempo and a **speed trainer** lives in the top bar on every page.
+**Neck** explorer (with **Interval shapes** and **Harmonics and physics** views: an interval constellation around any root, and natural harmonics with a standing-wave animation and the math of fret spacing), **Chords** (13 types, generated shapes, progressions, a **CAGED map**, and an animated **fretting hand** showing which finger goes where), **Scales** (13 scales by position, a loop-and-speed-up trainer, and **What fits over a chord?**: scales ranked for any chord with avoid notes marked), **Analyzer** (type chords like `G D Em C`: it finds the key, labels numerals and functions, spots secondary dominants and borrowed chords, plays it with the fretting hand, shows what to solo with, and can send it to the Jam room), **Circle of fifths** (interactive: tap a key and it rotates to the top with its chords lit up), **Tunings** (10 guitar tunings compared string by string, plus a step-by-step **retuning wizard** with a mic tuner), **Tuner**. A **metronome** with tap tempo and a **speed trainer** lives in the top bar on every page.
 
 ### Everywhere
+A **Why?** button in the top bar: switch it on and tap any note on the neck for a short narrated explanation of what that note is doing in the current chord, scale, key or jam.
+
 Guitar, bass and ukulele; six guitar tunings; 12–24 frets; left-handed mode; sharps or flats; spoken note names; keyboard shortcuts; phone layout with a bottom tab bar.
 
 ## Install it as an app
@@ -86,6 +88,7 @@ src/js/7-learn.js       learning path, lesson player, checks, theory notes
 src/js/7b-curriculum.js the 29 lessons and level guidebooks
 src/js/8-play.js        CAGED map, Jam room, Tab player, Live view, Chord check
 src/js/8c-tools.js      circle of fifths, tunings explorer + wizard, printable cheat sheets
+src/js/8d-labs.js       Why? explanations, interval shapes, harmonics, chord-scale matcher, progression analyzer
 src/js/9-sync.js        settings, progress codes, Google sync, install, reminders
 src/js/99-boot.js       app shell and navigation
 sw.js, manifest.webmanifest, icons/   installable app files

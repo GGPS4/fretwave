@@ -39,9 +39,19 @@ function hudStats(items) {
 /* ================= Explore ================= */
 const Explore = {
   id: 'explore', nav: 'Explore', title: 'Explore the neck',
-  help: 'Tap any fret to hear it. Each note keeps its own color everywhere on the neck, so your eyes learn the map while your ears learn the sound.',
-  show: 'all', focus: 0, sel: null, revealed: new Set(),
+  help: 'Tap any fret to hear it. Switch views to see interval shapes, or how harmonics and string physics work.',
+  show: 'all', focus: 0, sel: null, revealed: new Set(), view: 'notes',
   mount(p) {
+    p.innerHTML = `<div class="row view-row"><span class="lbl">View</span>${seg('ex-view', [['notes', 'Notes'], ['intervals', 'Interval shapes'], ['harmonics', 'Harmonics and physics']], this.view)}</div><div id="ex-body"></div>`;
+    wireSeg(p, 'ex-view', (v) => { if (HarmonicLab.unmount) HarmonicLab.unmount(); this.view = v; Neck.clear(); this.mount(p); });
+    const body = $('#ex-body', p);
+    if (this.view === 'intervals') { this.p = body; IntervalLab.mount(body, this); return; }
+    if (this.view === 'harmonics') { this.p = body; HarmonicLab.mount(body); return; }
+    this.mountNotes(body);
+  },
+  unmount() { HarmonicLab.unmount(); },
+  explain(s, f) { if (this.view === 'intervals') return IntervalLab.explain(s, f); if (this.view === 'harmonics') return HarmonicLab.explain(s, f); return null; },
+  mountNotes(p) {
     this.p = p; this.sel = null;
     p.innerHTML = `<div class="panel-grid">
       <div class="controls">
@@ -83,6 +93,8 @@ const Explore = {
     this._stagger = false;
   },
   onCell(s, f) {
+    if (this.view === 'intervals') return IntervalLab.onCell(s, f);
+    if (this.view === 'harmonics') return HarmonicLab.onCell(s, f);
     this.sel = { s, f };
     if (this.show === 'none') this.revealed.add(s + ':' + f);
     Neck.play(s, f);
@@ -324,6 +336,7 @@ const Find = {
     $('#hud').innerHTML = `<div class="prompt">Round complete</div>`;
     Drill.summary(this.p, r, { play: () => this.start(), setup: () => this.setup() }, `You found ${r.ok} of ${r.total} on the first try.`);
   },
+  explain() { return this.phase === 'play' ? false : null; },
   onKey(e) { if (e.code === 'Space' && this.phase === 'play') { e.preventDefault(); this.prompt(true); } },
 };
 
@@ -416,6 +429,7 @@ const NameIt = {
     Drill.summary(this.p, r, { play: () => this.start(), setup: () => this.setup() }, `You named ${r.ok} of ${r.total} on the first try.`);
   },
   onCell(s, f) { Neck.play(s, f); },
+  explain() { return this.phase === 'play' ? false : null; },
   onKey(e) {
     if (this.phase !== 'play') return;
     if (e.code === 'Space') { e.preventDefault(); Neck.play(this.q.s, this.q.f); return; }

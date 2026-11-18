@@ -133,6 +133,7 @@ const Chords = {
     $$('.prog-card', this.p || document).forEach((b) => b.classList.remove('on'));
   },
   onCell(s, f) { Neck.play(s, f); },
+  explain(s, f) { const t = chordType(this.type); return roleExplain(s, f, this.root, t.iv, `${noteName(this.root)}${t.sym}`); },
   onKey(e) { if (e.code === 'Space' && this.v) { e.preventDefault(); strum(this.v.frets); } },
 };
 
@@ -140,9 +141,17 @@ const Chords = {
 const Scales = {
   id: 'scales', nav: 'Scales', title: 'Scale map',
   help: 'Every scale tone is colored by its job in the scale. Pick a position to zoom into one hand shape, then press play and follow the lights.',
-  root: 9, scale: 'minpent', pos: 1, bpm: 120, labels: 'role', drone: false, playing: null,
+  root: 9, scale: 'minpent', pos: 1, bpm: 120, labels: 'role', drone: false, playing: null, view: 'map',
   sc() { return SCALES.find((x) => x.id === this.scale) || SCALES[0]; },
   mount(p) {
+    p.innerHTML = `<div class="row view-row"><span class="lbl">View</span>${seg('sc-view', [['map', 'Scale map'], ['fit', 'What fits over a chord?']], this.view)}</div><div id="sc-body"></div>`;
+    wireSeg(p, 'sc-view', (v) => { this.stop(); Sound.droneOff(); this.drone = false; this.view = v; this.mount(p); });
+    const body = $('#sc-body', p);
+    if (this.view === 'fit') { this.p = body; ChordFit.mount(body); return; }
+    this.mountMap(body);
+  },
+  explain(s, f) { if (this.view === 'fit') return ChordFit.explain(s, f); const sc = this.sc(); return roleExplain(s, f, this.root, sc.iv, `${noteName(this.root)} ${sc.name.toLowerCase()}`); },
+  mountMap(p) {
     this.p = p;
     p.innerHTML = `<div class="panel-grid">
       <div class="controls">
@@ -247,5 +256,5 @@ const Scales = {
     const btn = this.p && $('#sc-play', this.p); if (btn) btn.innerHTML = `${ICONS.play}Play this shape`;
   },
   onCell(s, f) { Neck.play(s, f); },
-  onKey(e) { if (e.code === 'Space') { e.preventDefault(); this.playing ? this.stop() : this.play(); } },
+  onKey(e) { if (this.view !== 'map') return; if (e.code === 'Space') { e.preventDefault(); this.playing ? this.stop() : this.play(); } },
 };

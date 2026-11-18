@@ -9,6 +9,7 @@ const Neck = {
       e.preventDefault();
       const s = +t.dataset.s, f = +t.dataset.f;
       Sound.ensure();
+      if (typeof Why !== 'undefined' && Why.on) { Why.show(s, f); return; }
       if (this.onCell) this.onCell(s, f, e);
     });
     this.build();

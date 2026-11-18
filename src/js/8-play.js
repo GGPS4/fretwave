@@ -195,6 +195,7 @@ const Jam = {
     $('#jm-score', this.p).innerHTML = `You played <b style="color:${noteColor(pc)}">${noteName(pc)}</b>: ${inChord ? 'a chord tone, perfect landing' : inScale ? 'in the scale' : 'outside the scale'}. ${Math.round(100 * this.inKey.ok / this.inKey.n)}% of your notes fit.`;
   },
   onCell(s, f) { Neck.play(s, f); },
+  explain(s, f) { const c = this.chordAt(this.bar), t = chordType(c.id); const pc = midiAt(s, f) % 12; const r = roleExplain(s, f, c.root, t.iv, `${noteName(c.root)}${t.sym} (the chord playing now)`); if (!t.iv.map((x) => mod(c.root + x, 12)).includes(pc)) r.text += this.scaleIv().map((x) => mod(this.key + x, 12)).includes(pc) ? ' It is in the scale, so use it to pass between chord tones.' : ' It is outside the scale: use it only as a quick passing note.'; return r; },
   onKey(e) { if (e.code === 'Space') { e.preventDefault(); this.playing ? this.stop() : this.start(); } },
 };
 

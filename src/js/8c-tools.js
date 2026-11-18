@@ -82,6 +82,7 @@ const Circle = {
   },
   cadence() { [0, 3, 4, 0].forEach((k, i) => setTimeout(() => { if (current === this) this.showChord(k); }, i * 1100)); },
   playScale() { const tonic = this.chords[0].root; const base = 48 + tonic; const ivs = this.minor ? [0, 2, 3, 5, 7, 8, 10, 12] : [...MAJ, 12]; ivs.forEach((iv, i) => Sound.play(base + iv, i * 0.3, 0.5)); },
+  explain(s, f) { const tonic = this.chords[0].root; const iv = this.minor ? [0, 2, 3, 5, 7, 8, 10] : MAJ; const r = roleExplain(s, f, tonic, iv, `the key of ${this.minor ? CIRCLE_MIN[this.idx] : CIRCLE_MAJ[this.idx] + ' major'}`); const pc = midiAt(s, f) % 12; const inCh = this.chords.filter((c) => chordType(c.id).iv.map((x) => mod(c.root + x, 12)).includes(pc)).map((c) => c.name); if (inCh.length) r.text += ` It appears in these chords of the key: ${inCh.join(', ')}.`; return r; },
   walk() {
     clearTimeout(this.walkT); let n = 0;
     const step = () => { if (current !== this || n > 12) return; this.select((this.idx + (n ? 1 : 0)) % 12, true); n++; this.walkT = setTimeout(step, 1100); };

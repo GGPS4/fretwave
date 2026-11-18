@@ -1,8 +1,10 @@
 /* ================= Ear training ================= */
+const DEGREE_NAMES = [['do', 'Home. Fully at rest.'], ['re', 'Just above home, wants to step down.'], ['mi', 'Bright and stable.'], ['fa', 'Leans down to mi.'], ['sol', 'Strong, open, stable.'], ['la', 'Sweet, a little wistful.'], ['ti', 'Tense: pulls up to do.']];
+const PROG_HINTS = { 'I V vi IV': 'Pop anthem: minor chord third', 'I vi IV V': '50s doo-wop: minor chord second', 'ii V I': 'Jazz: starts minor, lands home', 'I IV V IV': 'Rock: all major, never resolves', 'vi IV I V': 'Starts minor, feels moody', 'I IV V I': 'All major, ends home' };
 const Ear = {
   id: 'ear', nav: 'Ear', title: 'Ear training',
   help: 'Listen first, then answer. After each answer the neck draws the shape you just heard, so the sound and the picture lock together.',
-  ex: 'intervals', set: [3, 4, 5, 7, 12], dir: 'up', chordSet: ['maj', 'min', '7', 'dim'], q: null, score: { ok: 0, n: 0, streak: 0 }, echoLen: 3, echoSet: 'major', echoHint: true,
+  ex: 'intervals', set: [3, 4, 5, 7, 12], dir: 'up', chordSet: ['maj', 'min', '7', 'dim'], q: null, score: { ok: 0, n: 0, streak: 0 }, echoLen: 3, echoSet: 'major', echoHint: true, progSet: ['I V vi IV', 'I IV V I', 'ii V I', 'vi IV I V'], degSet: [0, 2, 4],
   mount(p) {
     this.p = p; this.q = null;
     p.innerHTML = `<div class="panel-grid">
@@ -15,7 +17,7 @@ const Ear = {
         <div class="answers" id="ear-answers"></div>
       </div>
       <div class="controls">
-        <div class="row"><span class="lbl">Practice</span>${seg('ear-ex', [['intervals', 'Intervals'], ['chords', 'Chord quality'], ['echo', 'Play it back']], this.ex)}</div>
+        <div class="row"><span class="lbl">Practice</span>${seg('ear-ex', [['intervals', 'Intervals'], ['chords', 'Chord quality'], ['prog', 'Progressions'], ['degree', 'Scale degrees'], ['echo', 'Play it back']], this.ex)}</div>
         <div id="ear-opts" class="controls"></div>
       </div></div>`;
     wireSeg(p, 'ear-ex', (v) => { this.ex = v; this.q = null; this.renderOpts(); this.renderAnswers(); this.reset(); });
@@ -26,7 +28,7 @@ const Ear = {
   },
   unmount() { if (Mic.active) Mic.stop(); },
   reset() { if (Mic.active) Mic.stop(); Neck.clear(); const bk = $('#ear-back', this.p); if (bk) bk.hidden = true; $('#hud').innerHTML = this.hudHTML(); $('#ear-verdict', this.p).textContent = 'Press play and listen.'; $('#ear-verdict', this.p).className = 'verdict'; $('#ear-next', this.p).hidden = true; },
-  hudHTML() { const s = this.score; return `<div class="prompt muted" style="font-weight:500;font-size:20px">${this.ex === 'intervals' ? 'How far apart are the two notes?' : this.ex === 'echo' ? 'Listen, then play the phrase back' : 'What kind of chord is that?'}</div>${hudStats([[s.n ? Math.round(100 * s.ok / s.n) + '%' : '–', 'Accuracy'], [s.ok, 'Correct'], [s.streak, 'Streak', s.streak >= 5]])}`; },
+  hudHTML() { const s = this.score; return `<div class="prompt muted" style="font-weight:500;font-size:20px">${this.ex === 'intervals' ? 'How far apart are the two notes?' : this.ex === 'echo' ? 'Listen, then play the phrase back' : this.ex === 'prog' ? 'Which progression is that?' : this.ex === 'degree' ? 'After the chords, which step of the key is the last note?' : 'What kind of chord is that?'}</div>${hudStats([[s.n ? Math.round(100 * s.ok / s.n) + '%' : '–', 'Accuracy'], [s.ok, 'Correct'], [s.streak, 'Streak', s.streak >= 5]])}`; },
   renderOpts() {
     const box = $('#ear-opts', this.p);
     if (this.ex === 'intervals') {
@@ -38,6 +40,15 @@ const Ear = {
         b.setAttribute('aria-pressed', this.set.includes(v)); this.q = null; this.renderAnswers(); this.reset();
       });
       wireSeg(box, 'ear-dir', (v) => { this.dir = v; });
+    } else if (this.ex === 'prog') {
+      const all = Object.keys(PROGRESSIONS).concat(['I IV V I']);
+      box.innerHTML = `<div class="row row-wide"><span class="lbl">Progressions in the mix</span><div class="wrap" id="pg-set">${all.map((k) => `<button class="chip" data-v="${k}" aria-pressed="${this.progSet.includes(k)}">${k.replace(/ /g, '–')}</button>`).join('')}</div></div>
+        <p class="muted" style="font-size:13.5px;margin:0">Listen for where the minor chords fall and whether it ends on home (I). After you answer, play it back on your guitar and Fretwave checks each chord.</p>`;
+      $('#pg-set', box).addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; const v = b.dataset.v; if (this.progSet.includes(v)) { if (this.progSet.length <= 2) { toast('Keep at least two progressions to choose from.'); return; } this.progSet = this.progSet.filter((x) => x !== v); } else this.progSet.push(v); b.setAttribute('aria-pressed', this.progSet.includes(v)); this.q = null; this.renderAnswers(); this.reset(); });
+    } else if (this.ex === 'degree') {
+      box.innerHTML = `<div class="row row-wide"><span class="lbl">Steps in the mix</span><div class="wrap" id="dg-set">${DEGREE_NAMES.map((d, i) => `<button class="chip" data-v="${i}" aria-pressed="${this.degSet.includes(i)}">${i + 1} (${d[0]})</button>`).join('')}</div></div>
+        <p class="muted" style="font-size:13.5px;margin:0">Chords set up the key; then one note plays. Name its step in the key. This is how musicians hear melodies: by their role, not their letter. Start with 1, 3 and 5, then add more.</p>`;
+      $('#dg-set', box).addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; const v = +b.dataset.v; if (this.degSet.includes(v)) { if (this.degSet.length <= 2) { toast('Keep at least two steps to choose from.'); return; } this.degSet = this.degSet.filter((x) => x !== v); } else this.degSet.push(v); b.setAttribute('aria-pressed', this.degSet.includes(v)); this.q = null; this.renderAnswers(); this.reset(); });
     } else if (this.ex === 'echo') {
       box.innerHTML = `<div class="row"><span class="lbl">Notes</span>${seg('ec-set', [['major', 'C major, open position'], ['pent', 'A minor pentatonic, frets 5–8'], ['string', 'One string only']], this.echoSet)}</div>
         <div class="row"><span class="lbl">Phrase length</span>${seg('ec-len', [['2', '2 notes'], ['3', '3 notes'], ['4', '4 notes'], ['5', '5 notes']], this.echoLen)}</div>
@@ -62,7 +73,11 @@ const Ear = {
       $('#ec-mic', box).addEventListener('click', () => this.echoMic());
       return;
     }
-    if (this.ex === 'intervals') {
+    if (this.ex === 'prog') {
+      box.innerHTML = this.progSet.map((k) => `<button type="button" class="answer" data-v="${k}"><b>${k.replace(/ /g, '–')}</b><small>${PROG_HINTS[k] || ''}</small></button>`).join('');
+    } else if (this.ex === 'degree') {
+      box.innerHTML = this.degSet.slice().sort().map((i) => `<button type="button" class="answer" data-v="${i}"><b>${i + 1}: ${DEGREE_NAMES[i][0]}</b><small>${DEGREE_NAMES[i][1]}</small></button>`).join('');
+    } else if (this.ex === 'intervals') {
       box.innerHTML = INTERVALS.filter((iv) => this.set.includes(iv.semi)).map((iv) => `<button type="button" class="answer" data-v="${iv.semi}"><b>${iv.name}</b><small>${iv.song}</small></button>`).join('');
     } else {
       const feel = { maj: 'Bright, stable', min: 'Sad, soft', '7': 'Bluesy, wants to move', maj7: 'Dreamy, jazzy', m7: 'Mellow, smooth', sus2: 'Open, airy', sus4: 'Suspended, unresolved', '6': 'Sweet, vintage', add9: 'Shimmering', dim: 'Tense, spooky', aug: 'Eerie, rising', m7b5: 'Dark, jazzy tension' };
@@ -77,6 +92,17 @@ const Ear = {
     $('#ear-verdict', this.p).textContent = 'Listen…'; $('#ear-verdict', this.p).className = 'verdict';
     $('#ear-sub', this.p).textContent = 'Press the orb to hear it again.';
     if (this.ex === 'echo') { this.newEcho(); return; }
+    if (this.ex === 'prog') {
+      const name = rand(this.progSet), key = rand([0, 2, 4, 7, 9, 5]);
+      const degs = name === 'I IV V I' ? [0, 3, 4, 0] : PROGRESSIONS[name];
+      this.q = { kind: 'prog', name, key, chords: degs.map((d) => [mod(key + MAJOR_STEPS[d], 12), DIATONIC[d]]) };
+      this.hear(); return;
+    }
+    if (this.ex === 'degree') {
+      const key = rand([0, 2, 4, 5, 7, 9]), deg = rand(this.degSet);
+      this.q = { kind: 'deg', key, deg, midi: 52 + mod(key - 4, 12) + MAJ[deg] };
+      this.hear(); return;
+    }
     if (this.ex === 'intervals') {
       const semi = rand(this.set);
       const n = strings().length, F = Math.min(S.settings.frets, 12);
@@ -106,6 +132,8 @@ const Ear = {
     const q = this.q; if (!q) return;
     const orb = $('#ear-play', this.p); orb.classList.add('playing'); setTimeout(() => orb.classList.remove('playing'), 1300);
     if (q.kind === 'echo') { q.cells.forEach((c, i) => Sound.play(c.midi, 0.05 + i * 0.5, 0.5)); return; }
+    if (q.kind === 'prog') { hearChords(q.chords, 1.05); return; }
+    if (q.kind === 'deg') { hearChords([[q.key, 'maj'], [mod(q.key + 5, 12), 'maj'], [mod(q.key + 7, 12), 'maj'], [q.key, 'maj']], 0.75); Sound.play(q.midi, 3.4, 0.6); return; }
     if (q.kind === 'iv') {
       const [first, second] = q.dir === 'down' ? [q.b, q.a] : [q.a, q.b];
       if (q.dir === 'both') { Sound.play(first.midi, 0.02); Sound.play(second.midi, 0.02); }
@@ -118,7 +146,7 @@ const Ear = {
   answer(v, btn) {
     const q = this.q;
     if (!q || q.done) { if (!q) toast('Press play first.'); return; }
-    const right = q.kind === 'iv' ? +v === q.semi : v === q.id;
+    const right = this.isRight(v);
     if (right) {
       q.done = true; btn.classList.add('right');
       if (!q.missed) { this.score.ok++; this.score.streak++; } else this.score.streak = 0;
@@ -132,11 +160,24 @@ const Ear = {
     }
     $('#hud').innerHTML = this.hudHTML();
   },
+  isRight(v) { const q = this.q; return q.kind === 'iv' ? +v === q.semi : q.kind === 'prog' ? v === q.name : q.kind === 'deg' ? +v === q.deg : v === q.id; },
   reveal(good) {
     const q = this.q;
-    $$('#ear-answers .answer', this.p).forEach((b) => { if ((q.kind === 'iv' ? +b.dataset.v === q.semi : b.dataset.v === q.id)) b.classList.add('right'); });
+    $$('#ear-answers .answer', this.p).forEach((b) => { if (this.isRight(b.dataset.v)) b.classList.add('right'); });
     const vd = $('#ear-verdict', this.p);
-    if (q.kind === 'iv') {
+    if (q.kind === 'prog') {
+      const names = q.chords.map(([r, id]) => noteName(r) + chordType(id).sym);
+      vd.textContent = (good ? (q.missed ? 'Got it: ' : 'Yes! ') : 'It was ') + q.name.replace(/ /g, '–');
+      $('#ear-sub', this.p).textContent = `In ${noteName(q.key)} major: ${names.join(' – ')}. Watch the shapes, then play it back.`;
+      q.chords.forEach(([r, id], i) => setTimeout(() => { if (this.q !== q || current !== this) return; const v = voicingOf(r, id); if (!v) return; Neck.clear(); drawVoicing(v, r, chordType(id).iv, { stagger: true }); if (S.settings.hand !== false) Neck.hand(v.frets); strum(v.frets); }, 300 + i * 1300));
+    } else if (q.kind === 'deg') {
+      const tonicName = noteName(q.key), pc = mod(q.key + MAJ[q.deg], 12);
+      vd.textContent = (good ? (q.missed ? 'Got it: ' : 'Yes! ') : 'It was ') + `step ${q.deg + 1} (${DEGREE_NAMES[q.deg][0]})`;
+      $('#ear-sub', this.p).textContent = `In ${tonicName} major that is ${noteName(pc)}. Hear how it resolves home.`;
+      Neck.clear(); allCells((m, s, f) => f <= 12 && MAJ.map((x) => mod(q.key + x, 12)).includes(m % 12)).forEach((c) => { const semi = mod(c.pc - q.key, 12); Neck.mark(c.s, c.f, { label: String(MAJ.indexOf(semi) + 1), color: c.pc === pc ? noteColor(pc) : 'rgba(241,233,218,.3)', textColor: c.pc === pc ? undefined : '#f1e9da', ring: c.pc === pc, cls: c.pc === pc ? '' : 'dim' }); });
+      const path = [[0], [1, 0], [2, 1, 0], [3, 2], [4, 5, 6, 7], [5, 6, 7], [6, 7]][q.deg];
+      path.forEach((d, i) => Sound.play(52 + mod(q.key - 4, 12) + (d === 7 ? 12 : MAJ[d]), 0.4 + i * 0.42, 0.5));
+    } else if (q.kind === 'iv') {
       const iv = INTERVALS.find((x) => x.semi === q.semi);
       vd.textContent = (good ? (q.missed ? 'Got it: ' : 'Yes! ') : 'It was a ') + iv.name;
       $('#ear-sub', this.p).textContent = `${q.dir === 'down' ? noteName(q.b.pc) + ' down to ' + noteName(q.a.pc) : q.dir === 'both' ? noteName(q.a.pc) + ' with ' + noteName(q.b.pc) : noteName(q.a.pc) + ' up to ' + noteName(q.b.pc)}. Remember the shape on the neck, and think “${iv.song}”.`;
@@ -173,6 +214,15 @@ const Ear = {
         if (m % 12 === order[got] || (q.dir === 'both' && order.includes(m % 12) && got === 0)) { allCells((x) => x === m).forEach((c) => Neck.pluck(c.s, c.f, '#5ee6a8')); got++; sub.textContent = got === 1 ? `Good: ${noteName(m % 12)}. Now the second note.` : ''; }
         if (got >= 2) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; vd.textContent = 'You played it back!'; vd.className = 'verdict good'; sub.textContent = 'Hearing it, naming it and playing it is how intervals stick.'; }
       });
+    } else if (q.kind === 'prog') {
+      let i = 0, good = 0;
+      const show = () => { const [r, id] = q.chords[i]; const v = voicingOf(r, id); Neck.clear(); if (v) { drawVoicing(v, r, chordType(id).iv); if (S.settings.hand !== false) Neck.hand(v.frets); } sub.textContent = `Play ${noteName(r)}${chordType(id).sym} (${i + 1} of ${q.chords.length}). Let it ring.`; };
+      show();
+      Mic.chromaCb = (c) => { const [r, id] = q.chords[i]; const res = checkChord(c, [...new Set(chordType(id).iv.map((x) => mod(r + x, 12)))]); if (res && res.ok) { if (++good >= 4) { good = 0; i++; if (i >= q.chords.length) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; vd.textContent = 'You played the whole progression!'; vd.className = 'verdict good'; sub.textContent = 'Hearing it, naming it and playing it: that is how progressions stick.'; return; } show(); } } else good = 0; };
+    } else if (q.kind === 'deg') {
+      const pc = mod(q.key + MAJ[q.deg], 12); let last = -1, st = 0;
+      sub.textContent = `Find step ${q.deg + 1} of ${noteName(q.key)} major on your guitar.`;
+      Mic.listen((f) => { if (f <= 0) { st = 0; return; } const m = Math.round(69 + 12 * Math.log2(f / 440)); if (m === last) st++; else { st = 1; last = m; } if (st === 3 && m % 12 === pc) { Mic.stop(); btn.innerHTML = `${ICONS.mic}Now play it on your guitar`; vd.textContent = `Found it: ${noteName(pc)}!`; vd.className = 'verdict good'; allCells((x) => x === m).forEach((c) => Neck.pluck(c.s, c.f, '#5ee6a8')); } });
     } else if (q.kind === 'ch') {
       const pcs = [...new Set(chordType(q.id).iv.map((i) => mod(q.root + i, 12)))]; let good = 0;
       sub.textContent = 'Strum the chord shown on the neck and let it ring.';
