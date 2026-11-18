@@ -495,7 +495,7 @@ const Path = {
     $('#mode-title').textContent = x.ls.title; $('#mode-help').textContent = x.ls.blurb;
     Player.open(x.ls.steps, {
       title: x.ls.title, kicker: `Level ${x.li + 1}, lesson ${x.i + 1}`,
-      onDone: (stars) => { S.learn.done[id] = Math.max(S.learn.done[id] || 0, stars); if (S.learn.skip) delete S.learn.skip[id]; if (!(S.learn.review || {})[id]) scheduleReview(id, stars === 3); persist(); renderDaily(); const lp = levelProgress(x.lv); if (lp.done === lp.total) return { headline: `Level ${x.li + 1} complete!`, sub: `You finished “${x.lv.title}”. On to ${CURRICULUM[x.li + 1] ? '“' + CURRICULUM[x.li + 1].title + '”' : 'the Jam room'}.` }; return null; },
+      onDone: (stars) => { logActivity('l'); { const t = today(); if (S.daily.last !== t) { S.daily.streak = S.daily.last === yesterday() ? S.daily.streak + 1 : 1; S.daily.last = t; } } S.learn.done[id] = Math.max(S.learn.done[id] || 0, stars); if (S.learn.skip) delete S.learn.skip[id]; if (!(S.learn.review || {})[id]) scheduleReview(id, stars === 3); persist(); renderDaily(); const lp = levelProgress(x.lv); if (lp.done === lp.total) return { headline: `Level ${x.li + 1} complete!`, sub: `You finished “${x.lv.title}”. On to ${CURRICULUM[x.li + 1] ? '“' + CURRICULUM[x.li + 1].title + '”' : 'the Jam room'}.` }; return null; },
     });
   },
   testOut(li) {

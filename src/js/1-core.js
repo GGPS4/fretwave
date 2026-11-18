@@ -140,12 +140,13 @@ const S = {
   stats: saved.stats || {},
   daily: saved.daily || { date: '', count: 0, streak: 0, last: '' },
   learn: Object.assign({ done: {}, last: null, open: {} }, saved.learn || {}),
+  history: saved.history || {},
   mode: 'path',
 };
 S.settings.drill = Object.assign({}, DEFAULTS.drill, S.settings.drill || {});
 function persist() {
   const st = typeof Tunings !== 'undefined' && typeof current !== 'undefined' && current === Tunings && Tunings.real ? Object.assign({}, S.settings, { tuning: Tunings.real }) : S.settings;
-  store.save({ settings: st, stats: S.stats, daily: S.daily, learn: S.learn });
+  store.save({ settings: st, stats: S.stats, daily: S.daily, learn: S.learn, history: S.history });
   if (typeof Sync !== 'undefined') Sync.queue();
   clearTimeout(persist._t);
   persist._t = setTimeout(() => { try { if ('caches' in window) caches.open('fretwave-state').then((c) => c.put('state.json', new Response(JSON.stringify({ last: S.daily.last, streak: S.daily.streak, reminder: S.settings.reminder || null })))).catch(() => {}); } catch (e) { /* no cache storage */ } }, 1500);
@@ -183,7 +184,12 @@ function recordAnswer(s, f, correct, ms) {
   if (S.daily.date !== t) { S.daily.date = t; S.daily.count = 0; }
   if (S.daily.last !== t) { S.daily.streak = S.daily.last === yesterday() ? S.daily.streak + 1 : 1; S.daily.last = t; }
   S.daily.count++;
+  logActivity('a');
   persist(); renderDaily();
+}
+function logActivity(kind) {
+  const t = today(); const h = S.history[t] || { a: 0, l: 0 }; h[kind] = (h[kind] || 0) + 1; S.history[t] = h;
+  const keys = Object.keys(S.history).sort(); while (keys.length > 120) delete S.history[keys.shift()];
 }
 function currentStreak() { return (S.daily.last === today() || S.daily.last === yesterday()) ? S.daily.streak : 0; }
 

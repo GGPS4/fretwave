@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Fretwave: see it, hear it, learn the fretboard</title>
 <meta name="description" content="Learn every note on the guitar fretboard with color, sound and play. Note games, chords, scales, ear training and a tuner, free in your browser.">
 <meta name="theme-color" content="#1d1a3b">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-title" content="Fretwave">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -30,11 +32,9 @@
     </div>
   </nav>
   <main>
-    <header class="topbar">
-      <div>
-        <h1 id="mode-title">Your learning path</h1>
-        <p id="mode-help"></p>
-      </div>
+    <div class="navbar" id="navbar">
+      <div class="nav-brand" aria-hidden="true"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#26234d"/><path d="M6 36c6-14 11-14 15 0s10 14 15 0 10-14 15 0 6 6 8 4" fill="none" stroke="#ffc857" stroke-width="5" stroke-linecap="round"/><circle cx="21" cy="36" r="5" fill="#ff7b54"/><circle cx="43" cy="30" r="5" fill="#5aa9ff"/></svg></div>
+      <div class="nav-title" id="nav-title" aria-hidden="true"></div>
       <div class="top-actions">
         <button class="why-btn" id="btn-why" aria-pressed="false" title="Tap any note to hear why it is there"></button>
         <div class="metro" id="metro"></div>
@@ -42,6 +42,10 @@
         <button class="icon-btn" id="btn-voice" aria-pressed="true" aria-label="Say note names aloud" title="Say note names aloud"></button>
         <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"></button>
       </div>
+    </div>
+    <header class="topbar" id="topbar">
+      <h1 id="mode-title">Home</h1>
+      <p id="mode-help"></p>
     </header>
     <nav class="subtabs" id="subtabs" role="tablist" aria-label="Pages in this section"></nav>
     <section class="stage" id="stage">
@@ -53,7 +57,8 @@
   </main>
 </div>
 
-<dialog id="settings">
+<dialog id="settings" class="sheet">
+  <div class="grabber" aria-hidden="true"></div>
   <h2>Settings</h2>
   <div class="controls" id="settings-body"></div>
   <div class="dlg-foot"><button class="btn btn-primary" id="settings-done">Done</button></div>

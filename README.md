@@ -6,7 +6,7 @@ No sign-up, no install, no build step. It's one `index.html` you can host on Git
 
 ## What's inside
 
-The app has four sections, each with a few pages, so there's never a wall of menus.
+The app opens on **Home**, a dashboard with your next lesson, today's goal ring and streak, accuracy and lesson totals, a bar chart of this week's practice, your level progress, the notes you miss most (one tap drills them) and shortcuts to the tuner, jam room, chord check and other tools. From there, four more sections each hold a few pages, so there's never a wall of menus.
 
 ### Learn
 | Page | What it does |
@@ -36,7 +36,9 @@ The curriculum: **1 Meet the neck** (strings, musical alphabet, half and whole s
 ### Everywhere
 A **Why?** button in the top bar: switch it on and tap any note on the neck for a short narrated explanation of what that note is doing in the current chord, scale, key or jam.
 
-Guitar, bass and ukulele; six guitar tunings; 12–24 frets; left-handed mode; sharps or flats; spoken note names; keyboard shortcuts; phone layout with a bottom tab bar.
+Guitar, bass and ukulele; six guitar tunings; 12–24 frets; left-handed mode; sharps or flats; spoken note names; keyboard shortcuts.
+
+On a phone it behaves like a native app: a bottom tab bar, a large title that shrinks into a frosted top bar as you scroll, swipeable page pills, settings in a bottom sheet, grouped option lists, instant press feedback, and padding for the notch and home indicator. Add it to your home screen for the full-screen version.
 
 ## Install it as an app
 

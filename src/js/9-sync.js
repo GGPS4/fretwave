@@ -18,7 +18,7 @@ Voice.sayLong = function (text) {
 };
 
 /* ================= Progress transfer + merge ================= */
-function snapshot() { return { v: 1, stats: S.stats, daily: S.daily, learn: S.learn, best: S.settings.bestChanges || {} }; }
+function snapshot() { return { v: 1, stats: S.stats, daily: S.daily, learn: S.learn, history: S.history, best: S.settings.bestChanges || {} }; }
 function mergeIn(o) {
   if (!o || typeof o !== 'object') return false;
   for (const k in o.stats || {}) { const a = S.stats[k], b = o.stats[k]; if (!a || (b && b.n > a.n)) S.stats[k] = b; }
@@ -28,6 +28,7 @@ function mergeIn(o) {
     if (b.date === a.date) a.count = Math.max(a.count || 0, b.count || 0); else if ((b.date || '') > (a.date || '')) { a.date = b.date; a.count = b.count; }
     if ((b.last || '') > (a.last || '')) { a.last = b.last; a.streak = b.streak; } else if (b.last === a.last) a.streak = Math.max(a.streak || 0, b.streak || 0);
   }
+  if (o.history) for (const d in o.history) { const a = S.history[d] || { a: 0, l: 0 }, b = o.history[d]; S.history[d] = { a: Math.max(a.a || 0, b.a || 0), l: Math.max(a.l || 0, b.l || 0) }; }
   if (o.best) { S.settings.bestChanges = S.settings.bestChanges || {}; for (const k in o.best) S.settings.bestChanges[k] = Math.max(S.settings.bestChanges[k] || 0, o.best[k]); }
   return true;
 }
@@ -57,7 +58,7 @@ const Sync = {
   async signOut() { if (this.fb) await this.fb.authM.signOut(this.fb.auth); this.user = null; renderSyncStatus(); },
   ref() { const { fsM, db } = this.fb; return fsM.doc(db, 'users', this.user.uid); },
   async pull() {
-    try { const d = await this.fb.fsM.getDoc(this.ref()); if (d.exists()) { mergeIn(JSON.parse(d.data().state)); store.save({ settings: S.settings, stats: S.stats, daily: S.daily, learn: S.learn }); renderDaily(); if (current && current.id !== 'path') remount(); else if (current) Path.show(); } await this.push(); this.status = 'Synced just now'; } catch (e) { this.status = 'Could not reach the sync server.'; }
+    try { const d = await this.fb.fsM.getDoc(this.ref()); if (d.exists()) { mergeIn(JSON.parse(d.data().state)); persist(); renderDaily(); if (current && current.id !== 'path') remount(); else if (current) Path.show(); } await this.push(); this.status = 'Synced just now'; } catch (e) { this.status = 'Could not reach the sync server.'; }
     renderSyncStatus();
   },
   async push() { if (!this.user || !this.fb) return; await this.fb.fsM.setDoc(this.ref(), { state: JSON.stringify(snapshot()), updated: Date.now() }); this.status = 'Synced'; renderSyncStatus(); },
@@ -119,7 +120,7 @@ let settingsTab = 'instrument';
 function openSettings(tab) {
   if (tab) settingsTab = tab;
   const st = S.settings, body = $('#settings-body');
-  const tabs = seg('st-tabs', [['instrument', 'Instrument'], ['sound', 'Sound and goals'], ['sync', 'Sync and app']], settingsTab);
+  const tabs = seg('st-tabs', [['instrument', 'Instrument'], ['sound', 'You and sound'], ['sync', 'Sync and app']], settingsTab);
   let html = '';
   if (settingsTab === 'instrument') html = `
     <div class="row"><span class="lbl">Instrument</span>${seg('st-inst', Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]), st.instrument)}</div>
@@ -129,6 +130,8 @@ function openSettings(tab) {
     <div class="row"><span class="lbl">Hand</span>${seg('st-hand', [['0', 'Right-handed'], ['1', 'Left-handed']], st.lefty ? '1' : '0')}</div>
     <p class="muted" style="font-size:13px;margin:0">Lessons always use a standard-tuned guitar; everything else follows these settings.</p>`;
   else if (settingsTab === 'sound') html = `
+    <div class="row"><span class="lbl">Your name</span><input type="text" id="st-name" value="${esc(st.name || '')}" placeholder="For your greeting" autocomplete="given-name" enterkeyhint="done" aria-label="Your name"></div>
+    <div class="row"><span class="lbl">Sound</span><label class="switch"><input type="checkbox" id="st-sound" ${st.sound ? 'checked' : ''}>Play sounds</label></div>
     <div class="row"><span class="lbl">Volume</span><div class="slider"><input type="range" min="0" max="1" step="0.05" value="${st.volume}" id="st-vol" aria-label="Volume"><output id="st-vol-o">${Math.round(st.volume * 100)}%</output></div></div>
     <div class="row"><span class="lbl">Voice</span><div class="wrap" style="gap:18px"><label class="switch"><input type="checkbox" id="st-speak" ${st.speak ? 'checked' : ''}>Say note names aloud</label><label class="switch"><input type="checkbox" id="st-narr" ${st.narrate !== false ? 'checked' : ''}>Read lessons aloud</label></div></div>
     <div class="row"><span class="lbl">Daily goal</span>${seg('st-goal', [['20', '20 notes'], ['40', '40 notes'], ['80', '80 notes'], ['150', '150 notes']], st.goal)}</div>`;
@@ -151,6 +154,8 @@ function openSettings(tab) {
     wireSeg(body, 'st-acc', (v) => { st.accidentals = v; rebuild(); });
     wireSeg(body, 'st-hand', (v) => { st.lefty = v === '1'; rebuild(); });
   } else if (settingsTab === 'sound') {
+    $('#st-name').addEventListener('input', (e) => { st.name = e.target.value.trim().slice(0, 30); persist(); if (current && current.id === 'home') $('#mode-title').textContent = Home.greeting(); });
+    $('#st-sound').addEventListener('change', (e) => { st.sound = e.target.checked; persist(); syncTopButtons(); if (!st.sound) { Sound.stopAll(); Metro.stop(); } });
     $('#st-vol').addEventListener('input', (e) => { st.volume = +e.target.value; $('#st-vol-o').textContent = Math.round(st.volume * 100) + '%'; Sound.setVolume(st.volume); persist(); });
     $('#st-vol').addEventListener('change', () => Sound.play(57));
     $('#st-speak').addEventListener('change', (e) => { st.speak = e.target.checked; persist(); syncTopButtons(); });
